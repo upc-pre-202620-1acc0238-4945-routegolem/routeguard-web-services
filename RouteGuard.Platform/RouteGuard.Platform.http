@@ -1,0 +1,6 @@
+@RouteGuard.Platform_HostAddress = http://localhost:5087
+
+GET {{RouteGuard.Platform_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

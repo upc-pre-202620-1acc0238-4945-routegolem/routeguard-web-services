@@ -1,0 +1,49 @@
+﻿using RouteGuard.Platform.Fleet.Domain.Model.Entities;
+using RouteGuard.Platform.Fleet.Interfaces.Rest.Resources;
+using Route = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
+
+namespace RouteGuard.Platform.Fleet.Interfaces.Rest.Transform;
+
+/// <summary>
+///     Assembler that converts a <see cref="Route" /> aggregate into its <see cref="RouteResource" />
+///     representation, including its stops, vehicle and assignment.
+/// </summary>
+public static class RouteResourceFromEntityAssembler
+{
+    /// <summary>Converts the aggregate into the published route resource.</summary>
+    /// <param name="entity">The route aggregate. Must not be null.</param>
+    /// <returns>The resulting <see cref="RouteResource" />.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="entity" /> is null.</exception>
+    public static RouteResource ToResourceFromEntity(Route entity)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+        return new RouteResource(
+            entity.Id.ToString(),
+            entity.OrganizationId.ToString(),
+            entity.Name,
+            entity.State.Value,
+            entity.DepartureTime?.ToString(),
+            entity.ServiceDays?.GetDays().ToList() ?? [],
+            entity.Vehicle is null ? null : ToVehicleResource(entity.Vehicle),
+            entity.Assignment is null ? null : ToAssignmentResource(entity.Assignment),
+            entity.GetStopSequence().Select(ToStopResource).ToList());
+    }
+
+    /// <summary>Converts a <see cref="Vehicle" /> entity into its resource.</summary>
+    private static VehicleResource ToVehicleResource(Vehicle vehicle) =>
+        new(vehicle.Id.ToString(), vehicle.Plate, vehicle.Model, vehicle.Brand, vehicle.Capacity);
+
+    /// <summary>Converts an <see cref="Assignment" /> entity into its resource.</summary>
+    private static AssignmentResource ToAssignmentResource(Assignment assignment) =>
+        new(assignment.Id.ToString(),
+            assignment.DriverId.ToString(),
+            assignment.Children.Select(child => child.ToString()).ToList());
+
+    /// <summary>Converts a <see cref="Stop" /> entity into its resource.</summary>
+    private static StopResource ToStopResource(Stop stop) =>
+        new(stop.Id.ToString(),
+            stop.Name,
+            stop.Coordinates.Latitude,
+            stop.Coordinates.Longitude,
+            stop.Order.Position);
+}
