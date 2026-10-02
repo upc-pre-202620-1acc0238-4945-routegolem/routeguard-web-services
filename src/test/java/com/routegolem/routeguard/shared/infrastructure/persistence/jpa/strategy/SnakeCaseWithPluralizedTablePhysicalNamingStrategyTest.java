@@ -1,5 +1,6 @@
 package com.routegolem.routeguard.shared.infrastructure.persistence.jpa.strategy;
 
+import com.routegolem.routeguard.shared.infrastructure.persistence.jpa.configuration.strategy.SnakeCaseWithPluralizedTablePhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.Identifier;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
