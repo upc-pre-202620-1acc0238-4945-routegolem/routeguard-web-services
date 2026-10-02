@@ -1,6 +1,6 @@
 package com.routegolem.routeguard.tracking.infrastructure.persistence.jpa.entities;
 
-import com.routegolem.routeguard.shared.infrastructure.persistence.jpa.model.AuditableAbstractPersistenceEntity;
+import com.routegolem.routeguard.shared.infrastructure.persistence.jpa.entities.AuditableAbstractPersistenceEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;

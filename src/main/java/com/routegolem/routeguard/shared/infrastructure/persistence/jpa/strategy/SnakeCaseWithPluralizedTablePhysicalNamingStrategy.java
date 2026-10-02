@@ -1,9 +1,9 @@
 package com.routegolem.routeguard.shared.infrastructure.persistence.jpa.strategy;
 
-import org.atteo.evo.inflector.English;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import static io.github.encryptorcode.pluralize.Pluralize.pluralize;
 
 public class SnakeCaseWithPluralizedTablePhysicalNamingStrategy implements PhysicalNamingStrategy {
 
@@ -51,7 +51,7 @@ public class SnakeCaseWithPluralizedTablePhysicalNamingStrategy implements Physi
         if (identifier == null) {
             return null;
         }
-        final String newName = English.plural(identifier.getText());
+        final String newName = pluralize(identifier.getText());
         return Identifier.toIdentifier(newName);
     }
 }

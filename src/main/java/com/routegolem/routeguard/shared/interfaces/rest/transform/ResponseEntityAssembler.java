@@ -1,4 +1,4 @@
-package com.routegolem.routeguard.shared.interfaces.rest.resources;
+package com.routegolem.routeguard.shared.interfaces.rest.transform;
 
 import com.routegolem.routeguard.shared.application.ApplicationError;
 import com.routegolem.routeguard.shared.application.Result;

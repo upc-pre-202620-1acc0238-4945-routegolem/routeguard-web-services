@@ -14,7 +14,7 @@ public record ApplicationError(String code, String message, String details) {
     }
 
     public static ApplicationError notFound(String resourceType, String identifier) {
-        return new ApplicationError("%s_NOT_FOUND".formatted(resourceType.toUpperCase()), "%s not foundÑ %s".formatted(resourceType, identifier), null);
+        return new ApplicationError("%s_NOT_FOUND".formatted(resourceType.toUpperCase()), "%s not found %s".formatted(resourceType, identifier), null);
     }
 
     public static ApplicationError businessRuleViolation(String rule, String reason){

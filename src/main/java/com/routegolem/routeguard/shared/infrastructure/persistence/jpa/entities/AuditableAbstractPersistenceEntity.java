@@ -1,4 +1,4 @@
-package com.routegolem.routeguard.shared.infrastructure.persistence.jpa.model;
+package com.routegolem.routeguard.shared.infrastructure.persistence.jpa.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,6 +1,7 @@
-package com.routegolem.routeguard.shared.interfaces.rest.resources;
+package com.routegolem.routeguard.shared.interfaces.rest.transform;
 
 import com.routegolem.routeguard.shared.application.ApplicationError;
+import com.routegolem.routeguard.shared.interfaces.rest.resources.ErrorResource;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
