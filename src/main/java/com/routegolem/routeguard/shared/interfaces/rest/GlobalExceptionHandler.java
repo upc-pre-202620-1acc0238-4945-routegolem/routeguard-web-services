@@ -1,7 +1,7 @@
 package com.routegolem.routeguard.shared.interfaces.rest.exceptions;
 
 import com.routegolem.routeguard.shared.interfaces.rest.resources.ErrorResource;
-import com.routegolem.routeguard.shared.interfaces.rest.resources.ErrorResponseAssembler;
+import com.routegolem.routeguard.shared.interfaces.rest.transform.ErrorResponseAssembler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
