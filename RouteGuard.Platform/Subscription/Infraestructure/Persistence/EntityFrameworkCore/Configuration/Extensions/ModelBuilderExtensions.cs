@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 using RouteGuard.Platform.Subscription.Domain.Model.Aggregates;
 using RouteGuard.Platform.Subscription.Domain.Model.ValueObjects;
 using SubscriptionAggregate = RouteGuard.Platform.Subscription.Domain.Model.Aggregates.Subscription;
 
-namespace RouteGuard.Platform.Subscription.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
+namespace RouteGuard.Platform.Subscription.Infraestructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 
 public static class ModelBuilderExtensions
 {

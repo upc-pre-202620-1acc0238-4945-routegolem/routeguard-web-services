@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 using RouteGuard.Platform.Subscription.Domain.Model.Aggregates;
 using RouteGuard.Platform.Subscription.Domain.Model.ValueObjects;
 

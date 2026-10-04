@@ -1,6 +1,5 @@
-
-
 using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 using RouteGuard.Platform.Subscription.Domain.Model.Commands;
 using RouteGuard.Platform.Subscription.Domain.Model.ValueObjects;
 

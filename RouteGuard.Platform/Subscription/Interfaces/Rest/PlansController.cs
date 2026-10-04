@@ -17,8 +17,8 @@ namespace RouteGuard.Platform.Subscription.Interfaces.Rest;
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Subscription plan endpoints.")]
 public class PlansController(
-    ISubscriptionCommandService commandService,
-    ISubscriptionQueryService queryService,
+    IPlanCommandService commandService,
+    IPlanQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
     [HttpPost]

@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
+using RouteGuard.Platform.Subscription.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Subscription.Domain.Repositories;
 using SubscriptionAggregate = RouteGuard.Platform.Subscription.Domain.Model.Aggregates.Subscription;
 
-namespace RouteGuard.Platform.Subscription.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+namespace RouteGuard.Platform.Subscription.Infraestructure.Persistence.EntityFrameworkCore.Repositories;
 
 public class SubscriptionRepository(AppDbContext context)
     : BaseRepository<SubscriptionAggregate>(context), ISubscriptionRepository
