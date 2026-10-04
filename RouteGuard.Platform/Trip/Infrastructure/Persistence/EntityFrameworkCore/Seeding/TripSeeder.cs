@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 using RouteAggregate = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
+using RouteState = RouteGuard.Platform.Fleet.Domain.Model.ValueObjects.RouteState;
+
+using TripOrgId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.OrganizationId;
+using TripRouteId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.RouteId;
+using TripDriverId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.DriverId;
 
 namespace RouteGuard.Platform.Trip.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 
@@ -22,14 +26,21 @@ public static class TripSeeder
         var route = await context.Set<RouteAggregate>().Where(r => r.State == activeState)
             .FirstOrDefaultAsync(cancellationToken);
         var driver = await context.Set<Driver>().OrderBy(d => d.Email).FirstOrDefaultAsync(cancellationToken);
+        
         if (route is null || driver is null) return;
-
-        var completed = new TripAggregate(route.OrganizationId, route.Id, driver.Id);
+        
+        var completed = new TripAggregate(
+            new TripOrgId(route.OrganizationId.Identifier), 
+            new TripRouteId(route.Id.Identifier), 
+            new TripDriverId(driver.Id.Identifier));
         completed.Start();
         completed.Complete();
         context.Add(completed);
-
-        var pending = new TripAggregate(route.OrganizationId, route.Id, driver.Id);
+        
+        var pending = new TripAggregate(
+            new TripOrgId(route.OrganizationId.Identifier), 
+            new TripRouteId(route.Id.Identifier), 
+            new TripDriverId(driver.Id.Identifier));
         context.Add(pending);
 
         await context.SaveChangesAsync(cancellationToken);

@@ -1,7 +1,8 @@
-﻿using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
-using RouteGuard.Platform.Trip.Application.QueryServices;
+﻿using RouteGuard.Platform.Trip.Application.QueryServices;
 using RouteGuard.Platform.Trip.Domain.Model.Queries;
+using RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Trip.Domain.Repositories;
+using RouteId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.RouteId;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
 
 namespace RouteGuard.Platform.Trip.Application.Internal.QueryServices;

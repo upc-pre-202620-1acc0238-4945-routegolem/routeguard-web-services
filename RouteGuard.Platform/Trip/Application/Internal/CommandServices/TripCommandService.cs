@@ -1,18 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
-using RouteGuard.Platform.Resources.Errors;
 using RouteGuard.Platform.Shared.Application.Model;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Domain.Repositories;
+using RouteGuard.Platform.Shared.Resources.Errors;
 using RouteGuard.Platform.Trip.Application.CommandServices;
-using RouteGuard.Platform.Trip.Domain.Model.Commands;
 using RouteGuard.Platform.Trip.Domain.Model;
+using RouteGuard.Platform.Trip.Domain.Model.Commands;
 using RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Trip.Domain.Repositories;
+using ChildId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.ChildId;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
 
 
-namespace RouteGuard.Platform.Trip.Application.Internal;
+namespace RouteGuard.Platform.Trip.Application.Internal.CommandServices;
 
 /// <summary>
 ///     Default implementation of <see cref="ITripCommandService" />.

@@ -1,5 +1,6 @@
-﻿using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
-using RouteGuard.Platform.Shared.Domain.Repositories;
+﻿using RouteGuard.Platform.Shared.Domain.Repositories;
+using RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
+using RouteId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.RouteId;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
 
 namespace RouteGuard.Platform.Trip.Domain.Repositories;

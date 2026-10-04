@@ -1,5 +1,6 @@
 using RouteGuard.Platform.Shared.Domain.Model.Entities;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
+using ChildId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.ChildId;
 
 namespace RouteGuard.Platform.Trip.Domain.Model.Entities;
 

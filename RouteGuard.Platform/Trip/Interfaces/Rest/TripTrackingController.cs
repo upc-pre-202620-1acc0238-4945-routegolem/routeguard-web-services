@@ -12,9 +12,12 @@ using RouteGuard.Platform.Stakeholder.Domain.Model.Aggregates;
 using RouteGuard.Platform.Trip.Application.CommandServices;
 using RouteGuard.Platform.Trip.Domain.Model.Commands;
 using RouteGuard.Platform.Trip.Domain.Model.Entities;
+using RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
 using Swashbuckle.AspNetCore.Annotations;
 using RouteAggregate = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
+using TripId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.TripId;
+using TripNotificationId = RouteGuard.Platform.Notifications.Domain.Model.ValueObjects.TripId;
 
 namespace RouteGuard.Platform.Trip.Interfaces.Rest;
 
@@ -258,7 +261,11 @@ public class TripTrackingController(
 
             if (geofence is { } alert)
             {
-                context.Add(new GeofenceAlert(trip.Id, new NotificationId(id), alert.AlertType, alert.Latitude,
+                context.Add(new GeofenceAlert(
+                    new TripNotificationId(trip.Id.Identifier), 
+                    new NotificationId(id),
+                    alert.AlertType,
+                    alert.Latitude,
                     alert.Longitude));
                 await context.SaveChangesAsync(cancellationToken);
             }
@@ -275,7 +282,7 @@ public class TripTrackingController(
         var trip = await FindTripAsync(tripId, cancellationToken);
         if (trip is null) return null;
 
-        var route = await context.Set<RouteAggregate>().FirstOrDefaultAsync(r => r.Id == trip.RouteId, cancellationToken);
+        var route = await context.Set<RouteAggregate>().FirstOrDefaultAsync(r => r.Id.Identifier == trip.RouteId.Identifier, cancellationToken);
         if (route is null) return null;
 
         var childIds = route.Assignment?.ChildIds ?? [];

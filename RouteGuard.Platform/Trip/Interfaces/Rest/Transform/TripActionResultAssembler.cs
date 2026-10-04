@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using RouteGuard.Platform.Resources.Errors;
 using RouteGuard.Platform.Shared.Application.Model;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
+using RouteGuard.Platform.Shared.Resources.Errors;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
 using RouteGuard.Platform.Trip.Domain.Model;
 

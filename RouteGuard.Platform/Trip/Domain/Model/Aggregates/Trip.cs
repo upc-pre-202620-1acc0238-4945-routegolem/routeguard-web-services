@@ -1,8 +1,11 @@
 using RouteGuard.Platform.Shared.Domain.Model.Entities;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Trip.Domain.Model.Commands;
 using RouteGuard.Platform.Trip.Domain.Model.Entities;
 using RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
+using ChildId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.ChildId;
+using DriverId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.DriverId;
+using OrganizationId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.OrganizationId;
+using RouteId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.RouteId;
 
 namespace RouteGuard.Platform.Trip.Domain.Model.Aggregates;
 

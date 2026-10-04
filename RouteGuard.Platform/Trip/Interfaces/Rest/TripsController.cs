@@ -1,8 +1,8 @@
 ﻿using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using RouteGuard.Platform.Resources.Errors;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
+using RouteGuard.Platform.Shared.Resources.Errors;
 using RouteGuard.Platform.Trip.Application.CommandServices;
 using RouteGuard.Platform.Trip.Application.QueryServices;
 using RouteGuard.Platform.Trip.Domain.Model.Commands;

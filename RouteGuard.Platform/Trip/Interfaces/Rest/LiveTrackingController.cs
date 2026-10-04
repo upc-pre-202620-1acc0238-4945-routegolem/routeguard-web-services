@@ -1,11 +1,12 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Aggregates;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
+using RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Trip.Domain.Model.Entities;
+using RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
 using Swashbuckle.AspNetCore.Annotations;
 using RouteAggregate = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
@@ -37,7 +38,7 @@ public class LiveTrackingController(AppDbContext context) : ControllerBase
         var result = trips
             .Select(trip =>
             {
-                var route = routes.FirstOrDefault(r => r.Id == trip.RouteId);
+                var route = routes.FirstOrDefault(r => r.Id.Identifier == trip.RouteId.Identifier);
                 return route is null ? null : Build(trip, route, drivers, children: [], live);
             })
             .Where(live => live is not null)
@@ -61,13 +62,13 @@ public class LiveTrackingController(AppDbContext context) : ControllerBase
         if (routes.Count == 0) return NoContent();
 
         var trips = (await context.Set<TripAggregate>().ToListAsync(cancellationToken))
-            .Where(t => t.IsInProgress() && routes.Any(r => r.Id == t.RouteId))
+            .Where(t => t.IsInProgress() && routes.Any(r => r.Id.Identifier == t.RouteId.Identifier))
             .OrderByDescending(t => t.StartTime)
             .ToList();
         var trip = trips.FirstOrDefault();
         if (trip is null) return NoContent();
 
-        var route = routes.First(r => r.Id == trip.RouteId);
+        var route = routes.First(r => r.Id.Identifier == trip.RouteId.Identifier);
         var drivers = await context.Set<Driver>().ToListAsync(cancellationToken);
 
         // Only the children of this parent that ride in this route.
@@ -127,7 +128,7 @@ public class LiveTrackingController(AppDbContext context) : ControllerBase
                 ?? "MISSING"))
             .ToList();
 
-        var driver = drivers.FirstOrDefault(d => d.Id == trip.DriverId);
+        var driver = drivers.FirstOrDefault(d => d.Id.Identifier == trip.DriverId.Identifier);
 
         return new LiveTripResource(
             tripId,

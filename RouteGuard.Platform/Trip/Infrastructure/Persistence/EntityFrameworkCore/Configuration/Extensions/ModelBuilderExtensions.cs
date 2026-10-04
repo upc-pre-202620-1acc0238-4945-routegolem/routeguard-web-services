@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Trip.Domain.Model.Entities;
 using RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
+using ChildId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.ChildId;
+using DriverId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.DriverId;
+using OrganizationId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.OrganizationId;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
-using RouteAggregate = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
+//using RouteAggregate = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
+using RouteId = RouteGuard.Platform.Trip.Domain.Model.ValueObjects.RouteId;
 
 namespace RouteGuard.Platform.Trip.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 
@@ -62,10 +65,13 @@ public static class ModelBuilderExtensions
             trip.Property(t => t.EndTime);
             trip.Property(t => t.CancelledAt);
             
+            /*
             // Cross-context foreign keys (DB-level integrity only; no navigation, no cascade).
             // Connects Trip → Fleet (route) and Trip → Stakeholder (driver).
             trip.HasOne<RouteAggregate>().WithMany().HasForeignKey(t => t.RouteId)
                 .OnDelete(DeleteBehavior.Restrict);
+             * 
+             */
             
             // Owned collection: boarding attendances.
             trip.OwnsMany(t => t.Attendances, attendance =>

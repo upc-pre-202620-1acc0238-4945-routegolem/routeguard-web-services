@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+namespace RouteGuard.Platform.Trip.Domain.Model.ValueObjects;
 
 /// <summary>
 ///     Shared value object that identifies a Trip across bounded contexts.
