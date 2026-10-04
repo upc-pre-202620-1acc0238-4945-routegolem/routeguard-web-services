@@ -31,7 +31,7 @@ public static class RouteResourceFromEntityAssembler
 
     /// <summary>Converts a <see cref="Vehicle" /> entity into its resource.</summary>
     private static VehicleResource ToVehicleResource(Vehicle vehicle) =>
-        new(vehicle.Id.ToString(), vehicle.Plate, vehicle.Model, vehicle.Brand, vehicle.Capacity);
+        new(vehicle.Id.Identifier, Guid.Empty, vehicle.Plate, vehicle.Brand, vehicle.Model, vehicle.Capacity, "ACTIVE");
 
     /// <summary>Converts an <see cref="Assignment" /> entity into its resource.</summary>
     private static AssignmentResource ToAssignmentResource(Assignment assignment) =>

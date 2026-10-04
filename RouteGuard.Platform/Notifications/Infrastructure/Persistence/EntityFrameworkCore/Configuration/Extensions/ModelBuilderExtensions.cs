@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using RouteGuard.Platform.Iam.Domain.Model.Aggregates;
+using RouteGuard.Platform.Iam.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Notifications.Domain.Model.Aggregates;
 using RouteGuard.Platform.Notifications.Domain.Model.Entities;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Notifications.Domain.Model.ValueObjects;
+
+using OrganizationId = RouteGuard.Platform.Notifications.Domain.Model.ValueObjects.OrganizationId;
 
 namespace RouteGuard.Platform.Notifications.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 
@@ -19,11 +21,11 @@ public static class ModelBuilderExtensions
                 .HasConversion(id => id.Identifier, value => new NotificationId(value))
                 .ValueGeneratedNever();
             notification.Property(n => n.OrganizationId)
-                .HasConversion(id => id.Identifier, value => new NotificationId(value));
+                .HasConversion(id => id.Identifier, value => new OrganizationId(value));
             notification.Property(n => n.ParentId)
-                .HasConversion(id => id.Identifier, value => new NotificationId(value));
+                .HasConversion(id => id.Identifier, value => new ParentId(value));
             notification.Property(n => n.TripId)
-                .HasConversion(id => id.Identifier, value => new NotificationId(value));
+                .HasConversion(id => id.Identifier, value => new TripId(value));
             notification.Property(n => n.Category)
                 .HasConversion(category => category.Value, value => new NotificationCategory(value))
                 .HasMaxLength(50).IsRequired();

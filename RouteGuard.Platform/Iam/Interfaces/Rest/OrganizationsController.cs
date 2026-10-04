@@ -18,8 +18,8 @@ namespace RouteGuard.Platform.Iam.Interfaces.Rest;
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Iam organization (tenant) endpoints.")]
 public class OrganizationsController(
-    IIamCommandService commandService,
-    IIamQueryService queryService,
+    IOrganizationCommandService commandService,
+    IOrganizationQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
     [HttpPost]

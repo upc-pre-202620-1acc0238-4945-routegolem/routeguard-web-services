@@ -36,7 +36,7 @@ public class NotificationRepository(AppDbContext context)
             .Include(n => n.Alerts)
             .Include(n => n.Announcements)
             .AsSplitQuery()
-            .Where(n => n.ParentId == parentNotificationId)
+            .Where(n => n.ParentId.Identifier == parentNotificationId.Identifier)
             .ToListAsync();
     }
 }

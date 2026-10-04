@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Route = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 using RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 
 namespace RouteGuard.Platform.Fleet.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 

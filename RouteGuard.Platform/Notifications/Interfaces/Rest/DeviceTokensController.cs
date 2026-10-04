@@ -2,6 +2,7 @@ using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RouteGuard.Platform.Iam.Domain.Model.Aggregates;
+using RouteGuard.Platform.Iam.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Notifications.Domain.Model.Entities;
 using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;

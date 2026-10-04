@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Shared.Interfaces.Rest.Resources;
+namespace RouteGuard.Platform.Fleet.Interfaces.Rest.Resources;
 
 public record CreateVehicleResource(
     Guid OrganizationId,

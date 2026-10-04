@@ -1,6 +1,5 @@
 using RouteGuard.Platform.Notifications.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Domain.Model.Entities;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 
 namespace RouteGuard.Platform.Notifications.Domain.Model.Entities;
 

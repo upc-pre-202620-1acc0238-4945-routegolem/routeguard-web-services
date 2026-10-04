@@ -7,8 +7,11 @@
 /// <param name="Brand">The vehicle brand.</param>
 /// <param name="Capacity">The seating capacity.</param>
 public record VehicleResource(
-    string Id,
+    Guid Id,
+    Guid OrganizationId,
     string Plate,
-    string Model,
     string Brand,
-    int Capacity);
+    string Model,
+    int Capacity,
+    string Status
+);

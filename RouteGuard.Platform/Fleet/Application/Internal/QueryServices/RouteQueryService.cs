@@ -1,7 +1,8 @@
 ﻿using RouteGuard.Platform.Fleet.Application.QueryServices;
 using RouteGuard.Platform.Fleet.Domain.Model.Queries;
+using RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Fleet.Domain.Repositories;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+using OrganizationId = RouteGuard.Platform.Fleet.Domain.Model.ValueObjects.OrganizationId;
 using Route = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 
 namespace RouteGuard.Platform.Fleet.Application.Internal.QueryServices;

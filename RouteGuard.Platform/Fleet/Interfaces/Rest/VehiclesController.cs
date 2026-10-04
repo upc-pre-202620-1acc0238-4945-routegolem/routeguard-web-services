@@ -1,13 +1,13 @@
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RouteGuard.Platform.Fleet.Interfaces.Rest.Resources;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
-using RouteGuard.Platform.Shared.Interfaces.Rest.Resources;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace RouteGuard.Platform.Shared.Interfaces.Rest;
+namespace RouteGuard.Platform.Fleet.Interfaces.Rest;
 
 [ApiController]
 [Route("api/v1/[controller]")]
@@ -112,7 +112,7 @@ public class VehiclesController(
         problemDetailsFactory.CreateProblemDetails(this, statusCode, error, error.ToString());
 
     private static VehicleResource ToResource(VehicleCatalogItem vehicle) =>
-        new(vehicle.Id, vehicle.OrganizationId, vehicle.Plate, vehicle.Model, vehicle.Capacity, vehicle.Status);
+        new(vehicle.Id, vehicle.OrganizationId, vehicle.Plate, string.Empty, vehicle.Model, vehicle.Capacity, vehicle.Status);
 
     private static bool IsValid(Guid organizationId, string? plate, string? model, int capacity) =>
         organizationId != Guid.Empty &&

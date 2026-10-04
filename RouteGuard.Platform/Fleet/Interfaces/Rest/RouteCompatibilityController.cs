@@ -10,6 +10,9 @@ using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
 using Swashbuckle.AspNetCore.Annotations;
+using ChildId = RouteGuard.Platform.Fleet.Domain.Model.ValueObjects.ChildId;
+using DriverId = RouteGuard.Platform.Fleet.Domain.Model.ValueObjects.DriverId;
+using OrganizationId = RouteGuard.Platform.Fleet.Domain.Model.ValueObjects.OrganizationId;
 using RouteAggregate = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 using TripAggregate = RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip;
 
@@ -73,7 +76,7 @@ public class RouteCompatibilityController(
 
         var routeValue = new RouteId(routeId);
         var trips = await context.Set<TripAggregate>()
-            .Where(trip => trip.RouteId == routeValue)
+            .Where(trip => trip.RouteId.Identifier == routeValue.Identifier)
             .ToListAsync(cancellationToken);
         var tripIds = trips.Select(trip => trip.Id.Identifier).ToHashSet();
 

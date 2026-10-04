@@ -1,5 +1,4 @@
 ﻿using RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 
 namespace RouteGuard.Platform.Fleet.Domain.Model.Entities;
 

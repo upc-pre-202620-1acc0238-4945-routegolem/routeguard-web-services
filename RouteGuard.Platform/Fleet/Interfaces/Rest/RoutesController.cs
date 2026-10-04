@@ -1,13 +1,14 @@
 ﻿using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using RouteGuard.Platform.Fleet.Application.CommandServices;
 using RouteGuard.Platform.Fleet.Application.QueryServices;
 using RouteGuard.Platform.Fleet.Domain.Model.Commands;
 using RouteGuard.Platform.Fleet.Domain.Model.Queries;
 using RouteGuard.Platform.Fleet.Interfaces.Rest.Resources;
 using RouteGuard.Platform.Fleet.Interfaces.Rest.Transform;
-using RouteGuard.Platform.Resources.Errors;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
+using RouteGuard.Platform.Shared.Resources.Errors;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace RouteGuard.Platform.Fleet.Interfaces.Rest;

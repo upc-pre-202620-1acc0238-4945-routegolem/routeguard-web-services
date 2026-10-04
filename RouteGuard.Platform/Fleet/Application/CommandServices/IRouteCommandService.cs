@@ -2,6 +2,8 @@
 using RouteGuard.Platform.Shared.Application.Model;
 using Route = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 
+namespace RouteGuard.Platform.Fleet.Application.CommandServices;
+
 /// <summary>
 ///     Application service that handles the write operations (commands) of the Fleet context.
 /// </summary>

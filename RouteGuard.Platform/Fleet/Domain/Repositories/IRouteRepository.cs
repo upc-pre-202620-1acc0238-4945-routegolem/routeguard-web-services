@@ -1,5 +1,7 @@
-﻿using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+﻿using RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Domain.Repositories;
+using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 using Route = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 
 namespace RouteGuard.Platform.Fleet.Domain.Repositories;

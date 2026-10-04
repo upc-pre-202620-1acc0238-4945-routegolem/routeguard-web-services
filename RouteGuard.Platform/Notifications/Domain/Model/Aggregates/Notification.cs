@@ -8,9 +8,9 @@ namespace RouteGuard.Platform.Notifications.Domain.Model.Aggregates;
 public partial class Notification : IAuditableEntity
 {
     public NotificationId Id { get; private set; }
-    public NotificationId OrganizationId { get; private set; }
-    public NotificationId ParentId { get; private set; }
-    public NotificationId TripId { get; private set; }
+    public OrganizationId OrganizationId { get; private set; }
+    public ParentId ParentId { get; private set; }
+    public TripId TripId { get; private set; }
     public NotificationCategory Category { get; private set; }
     public NotificationDeliveryState DeliveryState { get; private set; }
     public NotificationMessage Message { get; private set; }
@@ -41,9 +41,9 @@ public partial class Notification : IAuditableEntity
     protected Notification()
     {
         Id = new NotificationId();
-        OrganizationId = new NotificationId(Guid.Empty);
-        ParentId = new NotificationId(Guid.Empty);
-        TripId = new NotificationId(Guid.Empty);
+        OrganizationId = new OrganizationId(Guid.Empty);
+        ParentId = new ParentId(Guid.Empty);
+        TripId = new TripId(Guid.Empty);
         Category = new NotificationCategory(string.Empty);
         DeliveryState = new NotificationDeliveryState("Pending");
         Message = new NotificationMessage(string.Empty);
@@ -52,9 +52,9 @@ public partial class Notification : IAuditableEntity
 
     public Notification(CreateNotificationCommand command) : this()
     {
-        OrganizationId = new NotificationId(command.OrganizationId);
-        ParentId = new NotificationId(command.ParentId);
-        TripId = new NotificationId(command.TripId);
+        OrganizationId = new OrganizationId(command.OrganizationId);
+        ParentId = new ParentId(command.ParentId);
+        TripId = new TripId(command.TripId);
         Category = new NotificationCategory(command.Category);
         Message = new NotificationMessage(command.Message);
         DeliveryState = new NotificationDeliveryState("Pending");

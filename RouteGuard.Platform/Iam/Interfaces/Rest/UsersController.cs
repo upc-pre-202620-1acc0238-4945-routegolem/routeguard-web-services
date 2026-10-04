@@ -18,8 +18,8 @@ namespace RouteGuard.Platform.Iam.Interfaces.Rest;
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Iam user accounts and authentication endpoints.")]
 public class UsersController(
-    IIamCommandService commandService,
-    IIamQueryService queryService,
+    IUserCommandService commandService,
+    IUserQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
     [HttpPost]

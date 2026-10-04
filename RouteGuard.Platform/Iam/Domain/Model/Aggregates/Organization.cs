@@ -1,5 +1,4 @@
 using RouteGuard.Platform.Iam.Domain.Model.ValueObjects;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 
 namespace RouteGuard.Platform.Iam.Domain.Model.Aggregates;
 

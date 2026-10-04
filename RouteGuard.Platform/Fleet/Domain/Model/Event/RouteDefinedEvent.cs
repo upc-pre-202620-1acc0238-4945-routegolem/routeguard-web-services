@@ -1,6 +1,6 @@
 ﻿using RouteGuard.Platform.Shared.Domain.Model.Events;
 
-namespace RouteGuard.Platform.Fleet.Domain.Model.Events;
+namespace RouteGuard.Platform.Fleet.Domain.Model.Event;
 
 /// <summary>Domain event raised when a new route is defined.</summary>
 /// <param name="RouteId">The identifier of the defined route.</param>

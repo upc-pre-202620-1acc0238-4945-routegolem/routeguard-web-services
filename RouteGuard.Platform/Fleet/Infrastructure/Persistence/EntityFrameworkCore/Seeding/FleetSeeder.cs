@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using RouteGuard.Platform.Fleet.Domain.Model;
 using RouteGuard.Platform.Fleet.Domain.Model.Entities;
 using RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
@@ -10,6 +9,10 @@ using RouteGuard.Platform.Stakeholder.Domain.Model.Aggregates;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 using RouteAggregate = RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route;
 using FleetVehicle = RouteGuard.Platform.Fleet.Domain.Model.Entities.Vehicle;
+
+using FleetOrgId = RouteGuard.Platform.Fleet.Domain.Model.ValueObjects.OrganizationId;
+using FleetDriverId = RouteGuard.Platform.Fleet.Domain.Model.ValueObjects.DriverId;
+using FleetChildId = RouteGuard.Platform.Fleet.Domain.Model.ValueObjects.ChildId;
 
 namespace RouteGuard.Platform.Fleet.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 
@@ -26,9 +29,10 @@ public static class FleetSeeder
     public static async Task SeedAsync(AppDbContext context, CancellationToken cancellationToken = default)
     {
         await EnsureVehiclesCatalogAsync(context, cancellationToken);
-
-        var organizationId = new OrganizationId(IamSeeder.SeedOrganizationId);
-        var driver = await context.Set<Driver>().OrderBy(driver => driver.Email).FirstOrDefaultAsync(cancellationToken);
+        
+        var organizationId = new FleetOrgId(IamSeeder.SeedOrganizationId);
+        
+        var driver = await context.Set<Driver>().OrderBy(d => d.Email).FirstOrDefaultAsync(cancellationToken);
         var children = (await context.Set<Parent>()
                 .Include(parent => parent.Children)
                 .ToListAsync(cancellationToken))
@@ -41,7 +45,7 @@ public static class FleetSeeder
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    private static async Task EnsureMorningRouteAsync(AppDbContext context, OrganizationId organizationId,
+    private static async Task EnsureMorningRouteAsync(AppDbContext context, FleetOrgId organizationId,
         Driver? driver, IReadOnlyCollection<Child> children, CancellationToken cancellationToken)
     {
         var routeId = new RouteId(MorningRouteId);
@@ -54,10 +58,15 @@ public static class FleetSeeder
         }
 
         if (!NeedsMorningRouteRepair(route, children.Count)) return;
-
+        
         var assignment = driver is null
             ? null
-            : new Assignment(AssignmentId.New(), driver.Id, children.Select(child => child.Id));
+            : new Assignment(
+                AssignmentId.New(), 
+                new FleetDriverId(driver.Id.Identifier), 
+                children.Select(child => new FleetChildId(child.Id.Identifier)) // Traducimos toda la lista con LINQ
+            );
+            
         var state = driver is not null && children.Count > 0
             ? new RouteState(RouteState.Active)
             : RouteState.CreateDraft();
@@ -77,7 +86,7 @@ public static class FleetSeeder
             assignment);
     }
 
-    private static async Task EnsureDraftRouteAsync(AppDbContext context, OrganizationId organizationId,
+    private static async Task EnsureDraftRouteAsync(AppDbContext context, FleetOrgId organizationId,
         CancellationToken cancellationToken)
     {
         var routeId = new RouteId(DraftRouteId);

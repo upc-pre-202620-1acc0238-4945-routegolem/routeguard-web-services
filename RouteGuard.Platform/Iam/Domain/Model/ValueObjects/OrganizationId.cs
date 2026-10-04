@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
+namespace RouteGuard.Platform.Iam.Domain.Model.ValueObjects;
 
 /// <summary>
 ///     Shared value object that identifies an Organization across bounded contexts.

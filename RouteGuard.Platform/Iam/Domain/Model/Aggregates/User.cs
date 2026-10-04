@@ -1,5 +1,5 @@
 using RouteGuard.Platform.Iam.Domain.Model.ValueObjects;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 
 namespace RouteGuard.Platform.Iam.Domain.Model.Aggregates;
 
@@ -12,7 +12,7 @@ namespace RouteGuard.Platform.Iam.Domain.Model.Aggregates;
 ///     in the <c>Stakeholder</c> bounded context, linked back to this aggregate through the
 ///     shared <see cref="UserId" /> value object.
 /// </remarks>
-public class User
+public partial class User
 {
     /// <summary>Parameterless constructor required by EF Core materialization.</summary>
     protected User()

@@ -1,5 +1,5 @@
 using RouteGuard.Platform.Iam.Domain.Model.Aggregates;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Iam.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Domain.Repositories;
 
 namespace RouteGuard.Platform.Iam.Domain.Repositories;

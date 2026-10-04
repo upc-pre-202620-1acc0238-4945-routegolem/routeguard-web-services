@@ -1,6 +1,6 @@
 ﻿using RouteGuard.Platform.Shared.Domain.Model.Events;
 
-namespace RouteGuard.Platform.Fleet.Domain.Model.Events;
+namespace RouteGuard.Platform.Fleet.Domain.Model.Event;
 
 /// <summary>Domain event raised when a vehicle is assigned to a route.</summary>
 /// <param name="RouteId">The route the vehicle was assigned to.</param>
