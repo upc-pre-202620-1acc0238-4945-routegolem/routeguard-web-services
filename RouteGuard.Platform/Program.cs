@@ -6,12 +6,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using RouteGuard.Platform.Fleet.Application.CommandServices;
 using RouteGuard.Platform.Fleet.Application.Internal.CommandServices;
 using RouteGuard.Platform.Fleet.Application.Internal.QueryServices;
 using RouteGuard.Platform.Fleet.Application.QueryServices;
 using RouteGuard.Platform.Fleet.Domain.Repositories;
 using RouteGuard.Platform.Fleet.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using RouteGuard.Platform.Fleet.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
+using RouteGuard.Platform.Iam.Application.Acl;
 using RouteGuard.Platform.Iam.Application.CommandServices;
 using RouteGuard.Platform.Iam.Application.Internal.CommandServices;
 using RouteGuard.Platform.Iam.Application.Internal.OutboundServices;
@@ -23,6 +25,7 @@ using RouteGuard.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Rep
 using RouteGuard.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 using RouteGuard.Platform.Iam.Infrastructure.Tokens.Jwt.Configuration;
 using RouteGuard.Platform.Iam.Infrastructure.Tokens.Jwt.Services;
+using RouteGuard.Platform.Iam.Interfaces.Acl;
 using RouteGuard.Platform.Notifications.Application.CommandServices;
 using RouteGuard.Platform.Notifications.Application.Internal.CommandServices;
 using RouteGuard.Platform.Notifications.Application.Internal.QueryServices;
@@ -30,8 +33,6 @@ using RouteGuard.Platform.Notifications.Application.QueryServices;
 using RouteGuard.Platform.Notifications.Domain.Repositories;
 using RouteGuard.Platform.Notifications.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using RouteGuard.Platform.Notifications.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
-using RouteGuard.Platform.Resources.Errors;
-using RouteGuard.Platform.Resources.Shared;
 using RouteGuard.Platform.Shared.Domain.Repositories;
 using RouteGuard.Platform.Shared.Infrastructure.Interfaces.AspNetCore.Configuration;
 using RouteGuard.Platform.Shared.Infrastructure.Mediator.Cortex.Configuration;
@@ -39,6 +40,8 @@ using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using RouteGuard.Platform.Shared.Infrastructure.Pipeline.Middleware.Extensions;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
+using RouteGuard.Platform.Shared.Resources;
+using RouteGuard.Platform.Shared.Resources.Errors;
 using RouteGuard.Platform.Stakeholder.Application.CommandServices;
 using RouteGuard.Platform.Stakeholder.Application.Internal.CommandServices;
 using RouteGuard.Platform.Stakeholder.Application.Internal.QueryServices;
@@ -51,10 +54,11 @@ using RouteGuard.Platform.Subscription.Application.Internal.CommandServices;
 using RouteGuard.Platform.Subscription.Application.Internal.QueryServices;
 using RouteGuard.Platform.Subscription.Application.QueryServices;
 using RouteGuard.Platform.Subscription.Domain.Repositories;
+using RouteGuard.Platform.Subscription.Infraestructure.Persistence.EntityFrameworkCore.Repositories;
 using RouteGuard.Platform.Subscription.Infraestructure.Persistence.EntityFrameworkCore.Seeding;
-using RouteGuard.Platform.Subscription.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using RouteGuard.Platform.Trip.Application.CommandServices;
 using RouteGuard.Platform.Trip.Application.Internal;
+using RouteGuard.Platform.Trip.Application.Internal.CommandServices;
 using RouteGuard.Platform.Trip.Application.Internal.QueryServices;
 using RouteGuard.Platform.Trip.Application.QueryServices;
 using RouteGuard.Platform.Trip.Domain.Repositories;
@@ -178,8 +182,12 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IParentRepository, ParentRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IStudentGroupRepository, StudentGroupRepository>();
-builder.Services.AddScoped<IStakeholderCommandService, StakeholderCommandService>();
-builder.Services.AddScoped<IStakeholderQueryService, StakeholderQueryService>();
+builder.Services.AddScoped<IParentCommandService, ParentCommandService>();
+builder.Services.AddScoped<IParentQueryService, ParentQueryService>();
+builder.Services.AddScoped<IDriverCommandService, DriverCommandService>();
+builder.Services.AddScoped<IDriverQueryService, DriverQueryService>();
+builder.Services.AddScoped<IStudentGroupCommandService, StudentGroupCommandService>();
+builder.Services.AddScoped<IStudentGroupQueryService, StudentGroupQueryService>();
 
 // Trip bounded context
 builder.Services.AddScoped<ITripRepository, TripRepository>();
@@ -194,6 +202,8 @@ builder.Services.AddScoped<IRouteQueryService, RouteQueryService>();
 // Subscription bounded context
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<IPlanCommandService, PlanCommandService>();
+builder.Services.AddScoped<IPlanQueryService, PlanQueryService>();
 builder.Services.AddScoped<ISubscriptionCommandService, SubscriptionCommandService>();
 builder.Services.AddScoped<ISubscriptionQueryService, SubscriptionQueryService>();
 
@@ -205,10 +215,13 @@ builder.Services.AddScoped<INotificationQueryService, NotificationQueryService>(
 // Iam bounded context
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
-builder.Services.AddScoped<IIamCommandService, IamCommandService>();
-builder.Services.AddScoped<IIamQueryService, IamQueryService>();
 builder.Services.AddScoped<IHashingService, HashingService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IUserCommandService, UserCommandService>();
+builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddScoped<IOrganizationCommandService, OrganizationCommandService>();
+builder.Services.AddScoped<IOrganizationQueryService, OrganizationQueryService>();
+builder.Services.AddScoped<IIamContextFacade, IamContextFacade>();
 
 // ---------------------------------------------------------------------------
 // Mediator (Cortex) — command pipeline behaviors and event handling

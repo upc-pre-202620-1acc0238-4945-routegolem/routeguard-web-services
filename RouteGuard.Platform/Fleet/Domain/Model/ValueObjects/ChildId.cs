@@ -1,0 +1,6 @@
+namespace RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
+
+public class ChildId
+{
+    
+}

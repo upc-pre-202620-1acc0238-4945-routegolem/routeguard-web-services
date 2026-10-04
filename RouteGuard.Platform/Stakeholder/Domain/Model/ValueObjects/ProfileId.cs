@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+namespace RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 
 /// <summary>
 ///     Shared value object that identifies a Profile (a driver or parent stakeholder profile).

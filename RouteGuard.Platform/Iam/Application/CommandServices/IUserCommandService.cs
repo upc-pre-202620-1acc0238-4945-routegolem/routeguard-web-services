@@ -4,13 +4,8 @@ using RouteGuard.Platform.Shared.Application.Model;
 
 namespace RouteGuard.Platform.Iam.Application.CommandServices;
 
-public interface IIamCommandService
+public interface IUserCommandService
 {
     Task<Result<User>> Handle(SignUpCommand command, CancellationToken cancellationToken);
-
     Task<Result<(User User, string Token)>> Handle(SignInCommand command, CancellationToken cancellationToken);
-
-    Task<Result<Organization>> Handle(CreateOrganizationCommand command, CancellationToken cancellationToken);
-
-    Task<Result<Organization>> Handle(UpdateOrganizationCommand command, CancellationToken cancellationToken);
 }
