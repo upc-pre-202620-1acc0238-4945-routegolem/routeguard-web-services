@@ -7,10 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RouteGuard.Platform.Resources.Errors {
-    using System;
-    
-    
+namespace RouteGuard.Platform.Shared.Resources.Errors {
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

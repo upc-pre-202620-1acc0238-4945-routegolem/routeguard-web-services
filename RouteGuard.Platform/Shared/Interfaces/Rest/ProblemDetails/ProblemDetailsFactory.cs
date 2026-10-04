@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using RouteGuard.Platform.Resources.Shared;
-using RouteGuard.Platform.Resources.Errors;
+using RouteGuard.Platform.Shared.Resources;
+using RouteGuard.Platform.Shared.Resources.Errors;
 
 namespace RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
 

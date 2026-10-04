@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Resources.Shared;
+namespace RouteGuard.Platform.Shared.Resources;
 
 
 public class CommonMessages

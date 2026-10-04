@@ -6,7 +6,7 @@ using RouteGuard.Platform.Trip.Infrastructure.Persistence.EntityFrameworkCore.Co
 using RouteGuard.Platform.Fleet.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 using RouteGuard.Platform.Notifications.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 using RouteGuard.Platform.Stakeholder.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
-using RouteGuard.Platform.Subscription.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
+using RouteGuard.Platform.Subscription.Infraestructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 
 
 namespace RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;

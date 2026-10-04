@@ -1,9 +1,9 @@
 using System.Net.Mime;
 using System.Text.Json;
-using RouteGuard.Platform.Resources.Errors;
-using RouteGuard.Platform.Resources.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using RouteGuard.Platform.Shared.Resources;
+using RouteGuard.Platform.Shared.Resources.Errors;
 
 
 // For OperationCanceledException

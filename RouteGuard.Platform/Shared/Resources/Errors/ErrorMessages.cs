@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Resources.Errors;
+namespace RouteGuard.Platform.Shared.Resources.Errors;
 
 
 public class ErrorMessages
