@@ -16,14 +16,15 @@ namespace RouteGuard.Platform.Stakeholder.Interfaces.Rest;
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Stakeholder compatibility endpoint that exposes drivers and parents as profiles.")]
 public class ProfilesController(
-    IStakeholderQueryService queryService,
+    IParentQueryService parentQueryService,
+    IDriverQueryService driverQueryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetProfiles(CancellationToken cancellationToken)
     {
-        var parents = await queryService.Handle(new GetAllParentsQuery(), cancellationToken);
-        var drivers = await queryService.Handle(new GetAllDriversQuery(), cancellationToken);
+        var parents = await parentQueryService.Handle(new GetAllParentsQuery(), cancellationToken);
+        var drivers = await driverQueryService.Handle(new GetAllDriversQuery(), cancellationToken);
 
         var profiles = parents.Select(ToProfileResource)
             .Concat(drivers.Select(ToProfileResource));
@@ -34,10 +35,10 @@ public class ProfilesController(
     [HttpGet("{profileId:guid}")]
     public async Task<IActionResult> GetProfileById(Guid profileId, CancellationToken cancellationToken)
     {
-        var parent = await queryService.Handle(new GetParentByIdQuery(profileId), cancellationToken);
+        var parent = await parentQueryService.Handle(new GetParentByIdQuery(profileId), cancellationToken);
         if (parent is not null) return Ok(ToProfileResource(parent));
 
-        var driver = await queryService.Handle(new GetDriverByIdQuery(profileId), cancellationToken);
+        var driver = await driverQueryService.Handle(new GetDriverByIdQuery(profileId), cancellationToken);
         if (driver is not null) return Ok(ToProfileResource(driver));
 
         return problemDetailsFactory.CreateProblemDetails(this, StatusCodes.Status404NotFound,

@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using RouteGuard.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Aggregates;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Commands;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
+using RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects;
 
 namespace RouteGuard.Platform.Stakeholder.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 

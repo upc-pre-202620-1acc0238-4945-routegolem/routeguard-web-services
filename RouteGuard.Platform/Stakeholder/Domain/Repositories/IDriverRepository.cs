@@ -1,6 +1,6 @@
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Domain.Repositories;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
+using RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects;
 
 namespace RouteGuard.Platform.Stakeholder.Domain.Repositories;
 

@@ -17,8 +17,8 @@ namespace RouteGuard.Platform.Stakeholder.Interfaces.Rest;
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Stakeholder student group endpoints.")]
 public class StudentGroupsController(
-    IStakeholderCommandService commandService,
-    IStakeholderQueryService queryService,
+    IStudentGroupCommandService commandService,
+    IStudentGroupQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
     [HttpPost]

@@ -1,6 +1,10 @@
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Iam.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Commands;
 using RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects;
+using DriverId = RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects.DriverId;
+using Email = RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects.Email;
+using OrganizationId = RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects.OrganizationId;
 
 namespace RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 

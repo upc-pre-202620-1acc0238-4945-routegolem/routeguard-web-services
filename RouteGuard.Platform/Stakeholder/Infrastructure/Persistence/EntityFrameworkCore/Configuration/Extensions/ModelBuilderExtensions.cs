@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Iam.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Aggregates;
 using RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 using RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects;
+using Email = RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects.Email;
+using OrganizationId = RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects.OrganizationId;
 
 namespace RouteGuard.Platform.Stakeholder.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 

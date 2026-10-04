@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Shared.Domain.Model.ValueObjects;
+namespace RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
 
 /// <summary>
 ///     Shared value object for a person's full name.

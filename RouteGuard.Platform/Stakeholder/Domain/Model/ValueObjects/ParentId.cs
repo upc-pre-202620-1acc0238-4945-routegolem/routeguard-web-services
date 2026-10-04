@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Stakeholder.Domain.Model.Entities;
+namespace RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects;
 
 /// <summary>
 ///     Shared value object that identifies a parent across bounded contexts.

@@ -1,4 +1,4 @@
-namespace RouteGuard.Platform.Fleet.Domain.Model.ValueObjects;
+namespace RouteGuard.Platform.Stakeholder.Domain.Model.ValueObjects;
 
 /// <summary>
 ///     Shared value object that identifies a Driver across bounded contexts.

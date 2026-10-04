@@ -17,8 +17,8 @@ namespace RouteGuard.Platform.Stakeholder.Interfaces.Rest;
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Stakeholder driver endpoints.")]
 public class DriversController(
-    IStakeholderCommandService commandService,
-    IStakeholderQueryService queryService,
+    IDriverCommandService commandService,
+    IDriverQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
     [HttpPost]

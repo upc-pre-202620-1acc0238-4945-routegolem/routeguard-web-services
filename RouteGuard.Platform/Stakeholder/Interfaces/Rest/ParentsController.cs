@@ -17,8 +17,8 @@ namespace RouteGuard.Platform.Stakeholder.Interfaces.Rest;
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Stakeholder parent endpoints.")]
 public class ParentsController(
-    IStakeholderCommandService commandService,
-    IStakeholderQueryService queryService,
+    IParentCommandService commandService,
+    IParentQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
     [HttpPost]
