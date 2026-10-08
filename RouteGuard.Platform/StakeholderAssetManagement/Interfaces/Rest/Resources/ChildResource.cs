@@ -1,0 +1,3 @@
+namespace RouteGuard.Platform.StakeholderAssetManagement.Interfaces.Rest.Resources;
+
+public record ChildResource(Guid Id, string FirstName, string LastName, string FullName, int Age, string EnrollmentState);
