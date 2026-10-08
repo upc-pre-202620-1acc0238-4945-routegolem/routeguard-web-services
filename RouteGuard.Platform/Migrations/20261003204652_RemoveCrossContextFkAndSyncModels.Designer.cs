@@ -22,7 +22,7 @@ namespace RouteGuard.Platform.Migrations
                 .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route", b =>
+            modelBuilder.Entity("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Aggregates.Route", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -57,7 +57,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("routes");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Iam.Domain.Model.Aggregates.Organization", b =>
+            modelBuilder.Entity("RouteGuard.Platform.IdentityAccessManagement.Domain.Model.Aggregates.Organization", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -89,7 +89,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("organizations", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Iam.Domain.Model.Aggregates.User", b =>
+            modelBuilder.Entity("RouteGuard.Platform.IdentityAccessManagement.Domain.Model.Aggregates.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -135,7 +135,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Notifications.Domain.Model.Aggregates.Notification", b =>
+            modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Aggregates.Notification", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -224,7 +224,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("notifications", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Notifications.Domain.Model.Entities.DeviceToken", b =>
+            modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.DeviceToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -279,7 +279,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("device_tokens", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Notifications.Domain.Model.Entities.GeofenceAlert", b =>
+            modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.GeofenceAlert", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -334,7 +334,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("geofence_alerts", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Notifications.Domain.Model.Entities.NotificationTemplate", b =>
+            modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.NotificationTemplate", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -419,7 +419,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("vehicles", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Stakeholder.Domain.Model.Aggregates.Parent", b =>
+            modelBuilder.Entity("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Aggregates.Parent", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -451,7 +451,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("parents", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Stakeholder.Domain.Model.Entities.Driver", b =>
+            modelBuilder.Entity("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.Driver", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -493,7 +493,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("drivers", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Stakeholder.Domain.Model.Entities.StudentGroup", b =>
+            modelBuilder.Entity("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.StudentGroup", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -524,7 +524,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("student_groups", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Subscription.Domain.Model.Aggregates.Plan", b =>
+            modelBuilder.Entity("RouteGuard.Platform.SubscriptionPlanManagement.Domain.Model.Aggregates.Plan", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -555,7 +555,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("plans", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Subscription.Domain.Model.Aggregates.Subscription", b =>
+            modelBuilder.Entity("RouteGuard.Platform.SubscriptionPlanManagement.Domain.Model.Aggregates.Subscription", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -592,7 +592,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("subscriptions", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -641,7 +641,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("trips");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Entities.LocationRecord", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.LocationRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -690,7 +690,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("location_records", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Entities.OfflineSyncBatch", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.OfflineSyncBatch", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -726,7 +726,7 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("offline_sync_batches", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Entities.Waypoint", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Waypoint", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -785,9 +785,9 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("waypoints", (string)null);
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Fleet.Domain.Model.Aggregates.Route", b =>
+            modelBuilder.Entity("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Aggregates.Route", b =>
                 {
-                    b.OwnsOne("RouteGuard.Platform.Fleet.Domain.Model.Entities.Assignment", "Assignment", b1 =>
+                    b.OwnsOne("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Entities.Assignment", "Assignment", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -820,7 +820,7 @@ namespace RouteGuard.Platform.Migrations
                                 .HasConstraintName("f_k_route_assignments_routes_route_id");
                         });
 
-                    b.OwnsMany("RouteGuard.Platform.Fleet.Domain.Model.Entities.Stop", "Stops", b1 =>
+                    b.OwnsMany("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Entities.Stop", "Stops", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -880,7 +880,7 @@ namespace RouteGuard.Platform.Migrations
                                 .IsRequired();
                         });
 
-                    b.OwnsOne("RouteGuard.Platform.Fleet.Domain.Model.Entities.Vehicle", "Vehicle", b1 =>
+                    b.OwnsOne("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Entities.Vehicle", "Vehicle", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -937,9 +937,9 @@ namespace RouteGuard.Platform.Migrations
                     b.Navigation("Vehicle");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Iam.Domain.Model.Aggregates.User", b =>
+            modelBuilder.Entity("RouteGuard.Platform.IdentityAccessManagement.Domain.Model.Aggregates.User", b =>
                 {
-                    b.OwnsOne("RouteGuard.Platform.Stakeholder.Domain.Model.Entities.FullName", "FullName", b1 =>
+                    b.OwnsOne("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.FullName", "FullName", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -971,9 +971,9 @@ namespace RouteGuard.Platform.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Notifications.Domain.Model.Aggregates.Notification", b =>
+            modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Aggregates.Notification", b =>
                 {
-                    b.OwnsMany("RouteGuard.Platform.Notifications.Domain.Model.Entities.Alert", "Alerts", b1 =>
+                    b.OwnsMany("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.Alert", "Alerts", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -1008,7 +1008,7 @@ namespace RouteGuard.Platform.Migrations
                                 .HasConstraintName("f_k_alerts_notifications_owner_notification_id");
                         });
 
-                    b.OwnsMany("RouteGuard.Platform.Notifications.Domain.Model.Entities.Announcement", "Announcements", b1 =>
+                    b.OwnsMany("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.Announcement", "Announcements", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -1054,9 +1054,9 @@ namespace RouteGuard.Platform.Migrations
                     b.Navigation("Announcements");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Notifications.Domain.Model.Entities.DeviceToken", b =>
+            modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.DeviceToken", b =>
                 {
-                    b.HasOne("RouteGuard.Platform.Iam.Domain.Model.Aggregates.User", null)
+                    b.HasOne("RouteGuard.Platform.IdentityAccessManagement.Domain.Model.Aggregates.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1064,9 +1064,9 @@ namespace RouteGuard.Platform.Migrations
                         .HasConstraintName("f_k_device_tokens_users_user_id");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Notifications.Domain.Model.Entities.GeofenceAlert", b =>
+            modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.GeofenceAlert", b =>
                 {
-                    b.HasOne("RouteGuard.Platform.Notifications.Domain.Model.Aggregates.Notification", null)
+                    b.HasOne("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Aggregates.Notification", null)
                         .WithMany()
                         .HasForeignKey("NotificationId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1074,9 +1074,9 @@ namespace RouteGuard.Platform.Migrations
                         .HasConstraintName("f_k_geofence_alerts_notifications_notification_id");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Stakeholder.Domain.Model.Aggregates.Parent", b =>
+            modelBuilder.Entity("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Aggregates.Parent", b =>
                 {
-                    b.OwnsOne("RouteGuard.Platform.Stakeholder.Domain.Model.Entities.FullName", "FullName", b1 =>
+                    b.OwnsOne("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.FullName", "FullName", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -1104,7 +1104,7 @@ namespace RouteGuard.Platform.Migrations
                                 .HasConstraintName("f_k_parents_parents_id");
                         });
 
-                    b.OwnsMany("RouteGuard.Platform.Stakeholder.Domain.Model.Entities.Child", "Children", b1 =>
+                    b.OwnsMany("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.Child", "Children", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -1136,7 +1136,7 @@ namespace RouteGuard.Platform.Migrations
                                 .HasForeignKey("ParentId")
                                 .HasConstraintName("f_k_children_parents_parent_id");
 
-                            b1.OwnsOne("RouteGuard.Platform.Stakeholder.Domain.Model.Entities.FullName", "FullName", b2 =>
+                            b1.OwnsOne("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.FullName", "FullName", b2 =>
                                 {
                                     b2.Property<Guid>("Id")
                                         .HasColumnType("char(36)")
@@ -1174,9 +1174,9 @@ namespace RouteGuard.Platform.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Stakeholder.Domain.Model.Entities.Driver", b =>
+            modelBuilder.Entity("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.Driver", b =>
                 {
-                    b.OwnsOne("RouteGuard.Platform.Stakeholder.Domain.Model.Entities.FullName", "FullName", b1 =>
+                    b.OwnsOne("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.FullName", "FullName", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -1208,9 +1208,9 @@ namespace RouteGuard.Platform.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Subscription.Domain.Model.Aggregates.Subscription", b =>
+            modelBuilder.Entity("RouteGuard.Platform.SubscriptionPlanManagement.Domain.Model.Aggregates.Subscription", b =>
                 {
-                    b.HasOne("RouteGuard.Platform.Subscription.Domain.Model.Aggregates.Plan", null)
+                    b.HasOne("RouteGuard.Platform.SubscriptionPlanManagement.Domain.Model.Aggregates.Plan", null)
                         .WithMany()
                         .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1218,9 +1218,9 @@ namespace RouteGuard.Platform.Migrations
                         .HasConstraintName("f_k_subscriptions_plans_plan_id");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip", b =>
                 {
-                    b.OwnsMany("RouteGuard.Platform.Trip.Domain.Model.Entities.Attendance", "Attendances", b1 =>
+                    b.OwnsMany("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Attendance", "Attendances", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -1256,7 +1256,7 @@ namespace RouteGuard.Platform.Migrations
                                 .HasConstraintName("f_k_attendances_trips_trip_id");
                         });
 
-                    b.OwnsMany("RouteGuard.Platform.Trip.Domain.Model.Entities.Incident", "Incidents", b1 =>
+                    b.OwnsMany("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Incident", "Incidents", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -1294,9 +1294,9 @@ namespace RouteGuard.Platform.Migrations
                     b.Navigation("Incidents");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Entities.LocationRecord", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.LocationRecord", b =>
                 {
-                    b.HasOne("RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip", null)
+                    b.HasOne("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip", null)
                         .WithMany()
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1304,9 +1304,9 @@ namespace RouteGuard.Platform.Migrations
                         .HasConstraintName("f_k_location_records_trips_trip_id");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Entities.OfflineSyncBatch", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.OfflineSyncBatch", b =>
                 {
-                    b.HasOne("RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip", null)
+                    b.HasOne("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip", null)
                         .WithMany()
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1314,9 +1314,9 @@ namespace RouteGuard.Platform.Migrations
                         .HasConstraintName("f_k_offline_sync_batches_trips_trip_id");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Entities.Waypoint", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Waypoint", b =>
                 {
-                    b.HasOne("RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip", null)
+                    b.HasOne("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip", null)
                         .WithMany()
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Restrict)
