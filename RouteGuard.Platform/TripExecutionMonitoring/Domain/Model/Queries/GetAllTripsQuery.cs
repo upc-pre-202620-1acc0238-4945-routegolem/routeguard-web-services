@@ -1,0 +1,6 @@
+﻿namespace RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Queries;
+
+/// <summary>
+///     Query to retrieve all trips.
+/// </summary>
+public record GetAllTripsQuery;

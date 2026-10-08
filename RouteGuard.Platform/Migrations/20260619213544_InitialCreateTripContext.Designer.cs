@@ -22,7 +22,7 @@ namespace RouteGuard.Platform.Migrations
                 .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("char(36)")
@@ -59,9 +59,9 @@ namespace RouteGuard.Platform.Migrations
                     b.ToTable("trips");
                 });
 
-            modelBuilder.Entity("RouteGuard.Platform.Trip.Domain.Model.Aggregates.Trip", b =>
+            modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip", b =>
                 {
-                    b.OwnsMany("RouteGuard.Platform.Trip.Domain.Model.Entities.Attendance", "Attendances", b1 =>
+                    b.OwnsMany("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Attendance", "Attendances", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
@@ -97,7 +97,7 @@ namespace RouteGuard.Platform.Migrations
                                 .HasConstraintName("f_k_attendances_trips_trip_id");
                         });
 
-                    b.OwnsMany("RouteGuard.Platform.Trip.Domain.Model.Entities.Incident", "Incidents", b1 =>
+                    b.OwnsMany("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Incident", "Incidents", b1 =>
                         {
                             b1.Property<Guid>("Id")
                                 .HasColumnType("char(36)")
