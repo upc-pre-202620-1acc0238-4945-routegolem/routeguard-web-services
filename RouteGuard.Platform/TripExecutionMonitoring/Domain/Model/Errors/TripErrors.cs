@@ -18,4 +18,7 @@ public static class TripErrors
     /// <summary>The trip could not be created with the provided data.</summary>
     public static readonly Error TripCreationFailed =
         new("Trip.TripCreationFailed", "An error occurred while creating the trip.");
+    
+    public static readonly Error SyncOnlineFailed =
+        new("Trip.SyncOnlineFailed", "An error occurred while syncing the trip.");
 }

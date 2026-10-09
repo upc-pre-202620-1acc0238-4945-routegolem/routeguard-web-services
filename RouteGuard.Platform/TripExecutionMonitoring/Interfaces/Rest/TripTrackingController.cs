@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using System.Text.Json;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RouteGuard.Platform.NotificationsCommunication.Application.CommandServices;
@@ -12,6 +13,7 @@ using RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Aggregates;
 using RouteGuard.Platform.TripExecutionMonitoring.Application.CommandServices;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Commands;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities;
+using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Events;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects;
 using Swashbuckle.AspNetCore.Annotations;
 using RouteAggregate = RouteGuard.Platform.FleetRouteManagement.Domain.Model.Aggregates.Route;
@@ -34,7 +36,8 @@ namespace RouteGuard.Platform.TripExecutionMonitoring.Interfaces.Rest;
 public class TripTrackingController(
     AppDbContext context,
     ITripCommandService tripCommandService,
-    INotificationCommandService notificationCommandService) : ControllerBase
+    INotificationCommandService notificationCommandService,
+    IPublishEndpoint publishEndpoint) : ControllerBase
 {
     private const string Locale = "es-PE";
 
@@ -87,6 +90,13 @@ public class TripTrackingController(
         // Records saved without signal may have crossed a geofence: evaluate them in order.
         foreach (var location in locations)
             await EvaluateGeofencesAsync(tripId, location.Latitude, location.Longitude, cancellationToken);
+        
+        // We launch the event via RabbitMQ so the Notifications module is able to notice a change
+        await publishEndpoint.Publish(new OfflineSyncCompletedEvent(
+            TripId: tripId,
+            TotalLocationsSynced: locations.Count,
+            TotalBoardingsSynced: syncedBoardings
+        ), cancellationToken);
 
         return Ok(new { syncedLocations = locations.Count, syncedBoardings });
     }
@@ -282,12 +292,13 @@ public class TripTrackingController(
         var trip = await FindTripAsync(tripId, cancellationToken);
         if (trip is null) return null;
 
-        var route = await context.Set<RouteAggregate>().FirstOrDefaultAsync(r => r.Id.Identifier == trip.RouteId.Identifier, cancellationToken);
+        var targetRouteId = new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.RouteId(trip.RouteId.Identifier);
+        var route = await context.Set<RouteAggregate>().FirstOrDefaultAsync(r => r.Id == targetRouteId, cancellationToken);
         if (route is null) return null;
 
-        var childIds = route.Assignment?.ChildIds ?? [];
+        var assignedChildIds = route.Assignment?.Children.Select(c => new RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.ValueObjects.ChildId(c.Identifier)).ToHashSet() ?? [];
         var parents = (await context.Set<Parent>().ToListAsync(cancellationToken))
-            .Where(parent => parent.Children.Any(child => childIds.Contains(child.Id.Identifier)))
+            .Where(parent => parent.Children.Any(child => assignedChildIds.Contains(child.Id)))
             .ToList();
 
         return (trip, route, parents);

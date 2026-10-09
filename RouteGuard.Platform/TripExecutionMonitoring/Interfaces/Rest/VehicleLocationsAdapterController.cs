@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.NotificationsCommunication.Application.CommandServices;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
@@ -27,7 +28,8 @@ public class VehicleLocationsAdapterController(
     ITripQueryService tripQueryService,
     AppDbContext context,
     ITripCommandService tripCommandService,
-    INotificationCommandService notificationCommandService) : ControllerBase
+    INotificationCommandService notificationCommandService,
+    IPublishEndpoint publishEndpoint) : ControllerBase
 {
     [HttpPost]
     [SwaggerOperation("Record Legacy Vehicle Location", "Adapts legacy vehicle location payloads to the new Trip-centric tracking.", OperationId = "RecordLegacyVehicleLocation")]
@@ -45,7 +47,7 @@ public class VehicleLocationsAdapterController(
 
         var route = await context.Set<RouteAggregate>()
             .Include(r => r.Vehicle)
-            .FirstOrDefaultAsync(r => r.Vehicle != null && r.Vehicle.Id.Identifier == vehicleIdGuid, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Vehicle != null && r.Vehicle.Id == new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.VehicleId(vehicleIdGuid), cancellationToken);
         
         if (route == null)
         {
@@ -69,7 +71,7 @@ public class VehicleLocationsAdapterController(
             0.0, 
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
 
-        var trackingController = new TripTrackingController(context, tripCommandService, notificationCommandService)
+        var trackingController = new TripTrackingController(context, tripCommandService, notificationCommandService, publishEndpoint)
         {
             ControllerContext = this.ControllerContext
         };

@@ -76,14 +76,14 @@ public class RouteCompatibilityController(
 
         var routeValue = new RouteId(routeId);
         var trips = await context.Set<TripAggregate>()
-            .Where(trip => trip.RouteId.Identifier == routeValue.Identifier)
+            .Where(trip => trip.RouteId == new RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects.RouteId(routeValue.Identifier))
             .ToListAsync(cancellationToken);
-        var tripIds = trips.Select(trip => trip.Id.Identifier).ToHashSet();
+        var tripIds = trips.Select(trip => new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.TripId(trip.Id.Identifier)).ToHashSet();
 
         if (tripIds.Count > 0)
         {
             var notifications = await context.Set<Notification>()
-                .Where(notification => tripIds.Contains(notification.TripId.Identifier))
+                .Where(notification => tripIds.Contains(notification.TripId))
                 .ToListAsync(cancellationToken);
             context.RemoveRange(notifications);
         }

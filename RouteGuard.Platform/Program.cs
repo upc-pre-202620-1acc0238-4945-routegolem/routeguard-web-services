@@ -1,3 +1,4 @@
+using MassTransit;
 using System.Text;
 using Cortex.Mediator.Commands;
 using Cortex.Mediator.DependencyInjection;
@@ -228,6 +229,38 @@ builder.Services.AddScoped<IIamContextFacade, IamContextFacade>();
 // ---------------------------------------------------------------------------
 builder.Services.AddScoped(typeof(ICommandPipelineBehavior<>), typeof(LoggingCommandBehavior<>));
 builder.Services.AddCortexMediator([typeof(Program)]);
+
+// ---------------------------------------------------------------------------
+// MassTransit & RabbitMQ
+// ---------------------------------------------------------------------------
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<RouteGuard.Platform.NotificationsCommunication.Application.Internal.EventHandlers.OfflineSyncCompletedEventConsumer>();
+    
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var rmqUrl = builder.Configuration["RabbitMQ:Url"];
+        if (!string.IsNullOrEmpty(rmqUrl))
+        {
+            var uri = Environment.ExpandEnvironmentVariables(rmqUrl);
+            cfg.Host(new Uri(uri));
+        }
+        else
+        {
+            var host = builder.Configuration["RabbitMQ:Host"] ?? "localhost";
+            var username = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+            var password = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+
+            cfg.Host(host, "/", h =>
+            {
+                h.Username(username);
+                h.Password(password);
+            });
+        }
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 var app = builder.Build();
 

@@ -45,7 +45,7 @@ public static class NotificationSeeder
 
         var announcement = notifications.FirstOrDefault(notification =>
             notification.Category.Value == "ANNOUNCEMENT" &&
-            notification.TripId.Identifier == trip.Id.Identifier);
+            notification.TripId == new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.TripId(trip.Id.Identifier));
 
         if (announcement is null)
         {
@@ -55,7 +55,7 @@ public static class NotificationSeeder
             context.Add(announcement);
         }
 
-        if (announcement.Announcements.All(current => current.RouteId.Identifier != trip.RouteId.Identifier))
+        if (announcement.Announcements.All(current => current.RouteId != new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.NotificationId(trip.RouteId.Identifier)))
             announcement.AddAnnouncement(trip.RouteId.Identifier, WelcomeAnnouncement);
 
         await context.SaveChangesAsync(cancellationToken);

@@ -1,6 +1,7 @@
 ﻿using RouteGuard.Platform.Shared.Domain.Repositories;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects;
 using RouteId = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects.RouteId;
+using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities;
 using TripAggregate = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip;
 
 namespace RouteGuard.Platform.TripExecutionMonitoring.Domain.Repositories;
@@ -31,4 +32,9 @@ public interface ITripRepository : IBaseRepository<TripAggregate>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The trips for the route.</returns>
     Task<IEnumerable<TripAggregate>> FindByRouteIdAsync(RouteId routeId, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Guarda el registro de auditoría de una sincronización offline.
+    /// </summary>
+    Task AddSyncBatchAsync(OfflineSyncBatch batch, CancellationToken cancellationToken);
 }

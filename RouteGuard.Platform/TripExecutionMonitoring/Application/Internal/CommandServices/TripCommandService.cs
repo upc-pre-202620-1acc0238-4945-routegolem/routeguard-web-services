@@ -6,6 +6,7 @@ using RouteGuard.Platform.Shared.Resources.Errors;
 using RouteGuard.Platform.TripExecutionMonitoring.Application.CommandServices;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Commands;
+using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Repositories;
 using ChildId = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects.ChildId;
@@ -131,6 +132,33 @@ public class TripCommandService(
                 localizer[nameof(TripError.InternalServerError)]);
         }
     }
-    
+    /// <inheritdoc />
+    public async Task<Result<TripAggregate>> Handle(SyncOfflineRecordsCommand command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tripId = new TripId(command.TripId);
+            
+            // 1. Buscar el viaje en la base de datos para asegurarnos de que exista
+            var trip = await tripRepository.FindByTripIdAsync(tripId, cancellationToken);
+            if (trip is null)
+                return Result<TripAggregate>.Failure(TripError.TripNotFound, localizer[nameof(TripError.TripNotFound)]);
+
+            // 2. Crear el Batch de Sincronización guardando el JSON crudo del celular
+            var syncBatch = new OfflineSyncBatch(tripId, command.RecordsCount, command.RawPayload.GetRawText());
+
+            // 3. Guardarlo físicamente y hacer commit (transacción segura)
+            await tripRepository.AddSyncBatchAsync(syncBatch, cancellationToken);
+            await unitOfWork.CompleteAsync(cancellationToken);
+
+            // TODO (Fase 3): Aquí publicaremos el evento a RabbitMQ para que se procesen las coordenadas en segundo plano.
+
+            return Result<TripAggregate>.Success(trip);
+        }
+        catch (Exception ex)
+        {
+            return Result<TripAggregate>.Failure(TripError.SyncOfflineFailed, ex.Message);
+        }
+    }
     
 }

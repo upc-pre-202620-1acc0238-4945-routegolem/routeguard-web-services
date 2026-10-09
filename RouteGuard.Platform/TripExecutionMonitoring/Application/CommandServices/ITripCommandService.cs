@@ -31,4 +31,7 @@ public interface ITripCommandService
     
     /// <summary>Handles completing an in-progress trip.</summary>
     Task<Result<TripAggregate>> Handle(CompleteTripCommand command, CancellationToken cancellationToken);
+    
+    /// <summary>Handles the synchronization of an offline batch from the mobile app.</summary>
+    Task<Result<TripAggregate>> Handle(SyncOfflineRecordsCommand command, CancellationToken cancellationToken);
 }

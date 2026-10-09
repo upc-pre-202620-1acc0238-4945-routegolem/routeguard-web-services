@@ -38,7 +38,7 @@ public class LiveTrackingController(AppDbContext context) : ControllerBase
         var result = trips
             .Select(trip =>
             {
-                var route = routes.FirstOrDefault(r => r.Id.Identifier == trip.RouteId.Identifier);
+                var route = routes.FirstOrDefault(r => r.Id == new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.RouteId(trip.RouteId.Identifier));
                 return route is null ? null : Build(trip, route, drivers, children: [], live);
             })
             .Where(live => live is not null)
@@ -55,25 +55,25 @@ public class LiveTrackingController(AppDbContext context) : ControllerBase
             .FirstOrDefaultAsync(p => p.Id == new ParentId(parentId), cancellationToken);
         if (parent is null) return NotFound();
 
-        var childIds = parent.Children.Select(c => c.Id.Identifier).ToHashSet();
+        var childIds = parent.Children.Select(c => new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.ChildId(c.Id.Identifier)).ToHashSet();
         var routes = (await context.Set<RouteAggregate>().ToListAsync(cancellationToken))
-            .Where(r => (r.Assignment?.ChildIds ?? []).Any(childIds.Contains))
+            .Where(r => (r.Assignment?.Children ?? []).Any(childIds.Contains))
             .ToList();
         if (routes.Count == 0) return NoContent();
 
         var trips = (await context.Set<TripAggregate>().ToListAsync(cancellationToken))
-            .Where(t => t.IsInProgress() && routes.Any(r => r.Id.Identifier == t.RouteId.Identifier))
+            .Where(t => t.IsInProgress() && routes.Any(r => r.Id == new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.RouteId(t.RouteId.Identifier)))
             .OrderByDescending(t => t.StartTime)
             .ToList();
         var trip = trips.FirstOrDefault();
         if (trip is null) return NoContent();
 
-        var route = routes.First(r => r.Id.Identifier == trip.RouteId.Identifier);
+        var route = routes.First(r => r.Id == new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.RouteId(trip.RouteId.Identifier));
         var drivers = await context.Set<Driver>().ToListAsync(cancellationToken);
 
         // Only the children of this parent that ride in this route.
-        var assigned = (route.Assignment?.ChildIds ?? []).ToHashSet();
-        var ownChildren = parent.Children.Where(c => assigned.Contains(c.Id.Identifier)).ToList();
+        var assigned = (route.Assignment?.Children.Select(c => new RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.ValueObjects.ChildId(c.Identifier)) ?? []).ToHashSet();
+        var ownChildren = parent.Children.Where(c => assigned.Contains(c.Id)).ToList();
 
         var live = await LoadLiveDataAsync([trip.Id], cancellationToken);
         return Ok(Build(trip, route, drivers, ownChildren, live));
@@ -124,11 +124,11 @@ public class LiveTrackingController(AppDbContext context) : ControllerBase
 
         var liveChildren = children
             .Select(c => new LiveChildResource(c.Id.Identifier, c.FullName.ToString(),
-                attendances.FirstOrDefault(a => a.ChildId.Identifier == c.Id.Identifier)?.BoardingState.Value
+                attendances.FirstOrDefault(a => a.ChildId == new RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects.ChildId(c.Id.Identifier))?.BoardingState.Value
                 ?? "MISSING"))
             .ToList();
 
-        var driver = drivers.FirstOrDefault(d => d.Id.Identifier == trip.DriverId.Identifier);
+        var driver = drivers.FirstOrDefault(d => d.Id == new RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.ValueObjects.DriverId(trip.DriverId.Identifier));
 
         return new LiveTripResource(
             tripId,
