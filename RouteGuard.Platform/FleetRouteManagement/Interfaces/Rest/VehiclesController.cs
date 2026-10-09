@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +19,7 @@ public class VehiclesController(
     AppDbContext context,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     [SwaggerOperation("Create Vehicle", "Creates a vehicle record used by route planning views.",
         OperationId = "CreateVehicle")]
@@ -43,6 +46,7 @@ public class VehiclesController(
         return CreatedAtAction(nameof(GetVehicleById), new { vehicleId = vehicle.Id }, ToResource(vehicle));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet("{vehicleId:guid}")]
     [SwaggerOperation("Get Vehicle by Id", "Gets a vehicle record by id.", OperationId = "GetVehicleById")]
     [SwaggerResponse(200, "The vehicle was found.", typeof(VehicleResource))]
@@ -55,6 +59,7 @@ public class VehiclesController(
             : Ok(ToResource(vehicle));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet]
     [SwaggerOperation("Get Vehicles", "Gets all vehicle records.", OperationId = "GetVehicles")]
     [SwaggerResponse(200, "The vehicles were found.", typeof(IEnumerable<VehicleResource>))]
@@ -67,6 +72,7 @@ public class VehiclesController(
         return Ok(vehicles.Select(ToResource));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{vehicleId:guid}")]
     [SwaggerOperation("Update Vehicle", "Updates a vehicle record.", OperationId = "UpdateVehicle")]
     [SwaggerResponse(200, "The vehicle was updated.", typeof(VehicleResource))]
@@ -88,6 +94,7 @@ public class VehiclesController(
         return Ok(ToResource(vehicle));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{vehicleId:guid}")]
     [SwaggerOperation("Delete Vehicle", "Deletes a vehicle record.", OperationId = "DeleteVehicle")]
     [SwaggerResponse(200, "The vehicle was deleted.", typeof(VehicleResource))]

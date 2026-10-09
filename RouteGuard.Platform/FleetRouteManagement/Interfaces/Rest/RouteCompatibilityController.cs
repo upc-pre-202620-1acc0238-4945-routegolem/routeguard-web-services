@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +28,7 @@ public class RouteCompatibilityController(
     AppDbContext context,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{routeId:guid}")]
     [SwaggerOperation("Update Route", "Updates a route record and its current configuration.",
         OperationId = "UpdateRouteCompatibility")]
@@ -63,6 +66,7 @@ public class RouteCompatibilityController(
         return Ok(BuildRouteResource(route, resource));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{routeId:guid}")]
     [SwaggerOperation("Delete Route", "Deletes a route and dependent records used by the web application.",
         OperationId = "DeleteRouteCompatibility")]

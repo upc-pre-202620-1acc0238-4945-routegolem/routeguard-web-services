@@ -1,3 +1,4 @@
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +23,7 @@ public class OrganizationsController(
     IOrganizationQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost]
     [SwaggerOperation(Summary = "Create an organization", OperationId = "CreateOrganization")]
     public async Task<IActionResult> CreateOrganization(CreateOrganizationResource resource,
@@ -34,6 +36,7 @@ public class OrganizationsController(
                 IamResourceFromEntityAssembler.ToResourceFromEntity(organization)));
     }
 
+    [Authorize(Roles = AppRoles.Any)]
     [HttpGet("{organizationId:guid}")]
     [SwaggerOperation(Summary = "Get an organization by id", OperationId = "GetOrganizationById")]
     public async Task<IActionResult> GetOrganizationById(Guid organizationId, CancellationToken cancellationToken)
@@ -46,7 +49,7 @@ public class OrganizationsController(
         return Ok(IamResourceFromEntityAssembler.ToResourceFromEntity(organization));
     }
 
-    [Authorize]
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{organizationId:guid}")]
     [SwaggerOperation(Summary = "Update an organization", OperationId = "UpdateOrganization")]
     public async Task<IActionResult> UpdateOrganization(Guid organizationId, UpdateOrganizationResource resource,

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
@@ -19,8 +21,10 @@ namespace RouteGuard.Platform.StakeholderAssetManagement.Interfaces.Rest;
 public class ParentsController(
     IParentCommandService commandService,
     IParentQueryService queryService,
-    ProblemDetailsFactory problemDetailsFactory) : ControllerBase
+    ProblemDetailsFactory problemDetailsFactory,
+    CallerContext caller) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> CreateParent(CreateParentResource resource, CancellationToken cancellationToken)
     {
@@ -31,9 +35,12 @@ public class ParentsController(
                 StakeholderResourceFromEntityAssembler.ToResourceFromEntity(parent)));
     }
 
+    [Authorize(Roles = AppRoles.AdminOrParent)]
     [HttpGet("{parentId:guid}")]
     public async Task<IActionResult> GetParentById(Guid parentId, CancellationToken cancellationToken)
     {
+        // A parent can only read their own profile.
+        if (caller.IsParent && await caller.GetParentIdAsync(cancellationToken) != parentId) return Forbid();
         var parent = await queryService.Handle(new GetParentByIdQuery(parentId), cancellationToken);
         if (parent is null)
             return problemDetailsFactory.CreateProblemDetails(this, StatusCodes.Status404NotFound,
@@ -41,13 +48,22 @@ public class ParentsController(
         return Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(parent));
     }
 
+    [Authorize(Roles = AppRoles.AdminOrParent)]
     [HttpGet]
     public async Task<IActionResult> GetParents(CancellationToken cancellationToken)
     {
         var parents = await queryService.Handle(new GetAllParentsQuery(), cancellationToken);
+        // A parent only sees their own profile (the app uses this list to find the parent id of the account).
+        if (caller.IsParent)
+        {
+            var own = await caller.GetParentIdAsync(cancellationToken);
+            parents = parents.Where(p => p.Id.Identifier == own).ToList();
+        }
+
         return Ok(parents.Select(StakeholderResourceFromEntityAssembler.ToResourceFromEntity));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{parentId:guid}")]
     public async Task<IActionResult> UpdateParent(Guid parentId, CreateParentResource resource,
         CancellationToken cancellationToken)
@@ -58,6 +74,7 @@ public class ParentsController(
             parent => Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(parent)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{parentId:guid}")]
     public async Task<IActionResult> DeleteParent(Guid parentId, CancellationToken cancellationToken)
     {
@@ -66,6 +83,7 @@ public class ParentsController(
             parent => Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(parent)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{parentId:guid}/children")]
     public async Task<IActionResult> AddChild(Guid parentId, AddChildResource resource,
         CancellationToken cancellationToken)
@@ -76,6 +94,7 @@ public class ParentsController(
             parent => Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(parent)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{parentId:guid}/children/{childId:guid}")]
     public async Task<IActionResult> RemoveChild(Guid parentId, Guid childId, CancellationToken cancellationToken)
     {

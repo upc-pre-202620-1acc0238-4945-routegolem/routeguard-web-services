@@ -62,7 +62,7 @@ public static class NotificationSeeder
     }
 
     /// <summary>Notification templates (es-PE) with {placeholders}; seeded once, editable in the database.</summary>
-    private static async Task SeedTemplatesAsync(AppDbContext context, CancellationToken cancellationToken)
+    public static async Task SeedTemplatesAsync(AppDbContext context, CancellationToken cancellationToken = default)
     {
         if (await context.Set<NotificationTemplate>().AnyAsync(cancellationToken)) return;
 

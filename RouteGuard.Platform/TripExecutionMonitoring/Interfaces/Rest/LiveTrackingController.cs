@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +23,10 @@ namespace RouteGuard.Platform.TripExecutionMonitoring.Interfaces.Rest;
 [Route("api/v1")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Live trip monitoring for the administrator and the parents.")]
-public class LiveTrackingController(AppDbContext context) : ControllerBase
+public class LiveTrackingController(AppDbContext context, CallerContext caller) : ControllerBase
 {
     /// <summary>All trips in progress with the last known position of their vehicle.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet("trips/live")]
     public async Task<IActionResult> GetLiveTrips(CancellationToken cancellationToken)
     {
@@ -48,9 +51,13 @@ public class LiveTrackingController(AppDbContext context) : ControllerBase
     }
 
     /// <summary>The trip in progress that carries the children of the parent, or 204 when there is none.</summary>
+    [Authorize(Roles = AppRoles.AdminOrParent)]
     [HttpGet("parents/{parentId:guid}/active-trip")]
     public async Task<IActionResult> GetParentActiveTrip(Guid parentId, CancellationToken cancellationToken)
     {
+        // A parent can only follow their own children.
+        if (caller.IsParent && await caller.GetParentIdAsync(cancellationToken) != parentId) return Forbid();
+
         var parent = await context.Set<Parent>()
             .FirstOrDefaultAsync(p => p.Id == new ParentId(parentId), cancellationToken);
         if (parent is null) return NotFound();

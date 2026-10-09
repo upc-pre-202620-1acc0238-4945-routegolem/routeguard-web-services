@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using System.Text.Json;
 using MassTransit;
@@ -37,24 +39,29 @@ public class TripTrackingController(
     AppDbContext context,
     ITripCommandService tripCommandService,
     INotificationCommandService notificationCommandService,
-    IPublishEndpoint publishEndpoint) : ControllerBase
+    IPublishEndpoint publishEndpoint,
+    CallerContext caller) : ControllerBase
 {
     private const string Locale = "es-PE";
 
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost("locations")]
     public async Task<IActionResult> RecordLocation(Guid tripId, LocationUpdateResource resource,
         CancellationToken cancellationToken)
     {
-        if (await FindTripAsync(tripId, cancellationToken) is null) return NotFound();
+        var denied = await GuardTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
         await StoreLocationsAsync(tripId, [resource], cancellationToken);
         await EvaluateGeofencesAsync(tripId, resource.Latitude, resource.Longitude, cancellationToken);
         return Accepted();
     }
 
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpGet("locations/latest")]
     public async Task<IActionResult> GetLatestLocation(Guid tripId, CancellationToken cancellationToken)
     {
-        if (await FindTripAsync(tripId, cancellationToken) is null) return NotFound();
+        var denied = await GuardTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
         var latest = await context.Set<LocationRecord>().AsNoTracking()
             .Where(r => r.TripId == new TripId(tripId))
             .OrderByDescending(r => r.RecordedAt)
@@ -65,11 +72,13 @@ public class TripTrackingController(
                 latest.BatteryLevel, latest.Heading, latest.RecordedAt.ToUnixTimeMilliseconds()));
     }
 
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost("offline-sync")]
     public async Task<IActionResult> SyncOfflineRecords(Guid tripId, OfflineSyncResource resource,
         CancellationToken cancellationToken)
     {
-        if (await FindTripAsync(tripId, cancellationToken) is null) return NotFound();
+        var denied = await GuardTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
 
         var locations = (resource.Locations ?? []).OrderBy(l => l.RecordedAt).ToList();
         await StoreLocationsAsync(tripId, locations, cancellationToken);
@@ -101,9 +110,13 @@ public class TripTrackingController(
         return Ok(new { syncedLocations = locations.Count, syncedBoardings });
     }
 
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost("panic")]
     public async Task<IActionResult> TriggerPanic(Guid tripId, CancellationToken cancellationToken)
     {
+        var denied = await GuardTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
+
         var fanOut = await LoadFanOutContextAsync(tripId, cancellationToken);
         if (fanOut is null) return NotFound();
 
@@ -117,12 +130,16 @@ public class TripTrackingController(
         return Ok(new { notified = parents.Count });
     }
 
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost("broadcast")]
     public async Task<IActionResult> PostBroadcast(Guid tripId, BroadcastResource resource,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(resource.Message))
             return BadRequest(new { title = "The announcement message cannot be empty." });
+
+        var denied = await GuardTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
 
         var fanOut = await LoadFanOutContextAsync(tripId, cancellationToken);
         if (fanOut is null) return NotFound();
@@ -280,6 +297,16 @@ public class TripTrackingController(
                 await context.SaveChangesAsync(cancellationToken);
             }
         }
+    }
+
+    /// <summary>404 when the trip does not exist; 403 when a driver tries to operate a trip that is not theirs.</summary>
+    private async Task<IActionResult?> GuardTripAsync(Guid tripId, CancellationToken cancellationToken)
+    {
+        var trip = await FindTripAsync(tripId, cancellationToken);
+        if (trip is null) return NotFound();
+        if (caller.IsDriver && await caller.GetDriverIdAsync(cancellationToken) != trip.DriverId.Identifier)
+            return Forbid();
+        return null;
     }
 
     private Task<TripAggregate?> FindTripAsync(Guid tripId, CancellationToken cancellationToken) =>

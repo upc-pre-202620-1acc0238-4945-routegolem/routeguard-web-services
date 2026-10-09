@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
@@ -21,6 +23,7 @@ public class PlansController(
     IPlanQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> CreatePlan(CreatePlanResource resource, CancellationToken cancellationToken)
     {
@@ -31,6 +34,7 @@ public class PlansController(
                 SubscriptionResourceFromEntityAssembler.ToResourceFromEntity(plan)));
     }
 
+    [Authorize(Roles = AppRoles.Any)]
     [HttpGet("{planId:guid}")]
     public async Task<IActionResult> GetPlanById(Guid planId, CancellationToken cancellationToken)
     {
@@ -41,6 +45,7 @@ public class PlansController(
         return Ok(SubscriptionResourceFromEntityAssembler.ToResourceFromEntity(plan));
     }
 
+    [Authorize(Roles = AppRoles.Any)]
     [HttpGet]
     public async Task<IActionResult> GetPlans(CancellationToken cancellationToken)
     {

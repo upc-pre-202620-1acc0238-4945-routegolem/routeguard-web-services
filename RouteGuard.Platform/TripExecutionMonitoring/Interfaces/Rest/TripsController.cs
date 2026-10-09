@@ -1,4 +1,6 @@
 ﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
@@ -33,10 +35,21 @@ public class TripsController(
     ITripCommandService tripCommandService,
     ITripQueryService tripQueryService,
     IStringLocalizer<ErrorMessages> errorLocalizer,
-    ProblemDetailsFactory problemDetailsFactory)
+    ProblemDetailsFactory problemDetailsFactory,
+    CallerContext caller)
     : ControllerBase
 {
+    /// <summary>403 when a driver tries to operate a trip that belongs to another driver (admins are not limited).</summary>
+    private async Task<IActionResult?> DriverOwnsTripAsync(Guid tripId, CancellationToken cancellationToken)
+    {
+        if (!caller.IsDriver) return null;
+        var trip = await tripQueryService.Handle(new GetTripByIdQuery(tripId), cancellationToken);
+        if (trip is null) return null; // the action answers 404
+        return await caller.GetDriverIdAsync(cancellationToken) == trip.DriverId.Identifier ? null : Forbid();
+    }
+
     /// <summary>Prepares (creates) a new trip session.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost]
     [SwaggerOperation("Create Trip", "Prepares a new trip session for a route and driver.",
         OperationId = "CreateTrip")]
@@ -44,6 +57,12 @@ public class TripsController(
     [SwaggerResponse(400, "The trip could not be created.")]
     public async Task<IActionResult> CreateTrip(CreateTripResource resource, CancellationToken cancellationToken)
     {
+        // A driver can only prepare trips for themselves.
+        if (caller.IsDriver &&
+            (!Guid.TryParse(resource.DriverId, out var requestedDriver) ||
+             requestedDriver != await caller.GetDriverIdAsync(cancellationToken)))
+            return Forbid();
+
         var command = CreateTripCommandFromResourceAssembler.ToCommandFromResource(resource);
         var result = await tripCommandService.Handle(command, cancellationToken);
 
@@ -53,6 +72,7 @@ public class TripsController(
     }
     
     /// <summary>Starts a prepared trip.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost("{tripId:guid}/start")]
     [SwaggerOperation("Start Trip", "Starts a prepared trip.", OperationId = "StartTrip")]
     [SwaggerResponse(200, "The trip was started.", typeof(TripResource))]
@@ -60,18 +80,23 @@ public class TripsController(
     [SwaggerResponse(409, "The trip is not in a startable state.")]
     public async Task<IActionResult> StartTrip(Guid tripId, CancellationToken cancellationToken)
     {
+        var denied = await DriverOwnsTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
         var result = await tripCommandService.Handle(new StartTripCommand(tripId), cancellationToken);
         return TripActionResultAssembler.ToActionResult(this, result, problemDetailsFactory,
             trip => Ok(TripResourceFromEntityAssembler.ToResourceFromEntity(trip)));
     }
     
     /// <summary>Gets a trip by its unique identifier.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpGet("{tripId:guid}")]
     [SwaggerOperation("Get Trip by Id", "Gets a trip by its unique identifier.", OperationId = "GetTripById")]
     [SwaggerResponse(200, "The trip was found.", typeof(TripResource))]
     [SwaggerResponse(404, "The trip was not found.")]
     public async Task<IActionResult> GetTripById(Guid tripId, CancellationToken cancellationToken)
     {
+        var denied = await DriverOwnsTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
         var trip = await tripQueryService.Handle(new GetTripByIdQuery(tripId), cancellationToken);
 
         return TripActionResultAssembler.ToActionResultFromLookup(this, trip, errorLocalizer, problemDetailsFactory,
@@ -79,6 +104,7 @@ public class TripsController(
     }
     
     /// <summary>Gets all trips, optionally filtered by route.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpGet]
     [SwaggerOperation("Get Trips", "Gets all trips, optionally filtered by route id.", OperationId = "GetTrips")]
     [SwaggerResponse(200, "The trips were found.", typeof(IEnumerable<TripResource>))]
@@ -88,10 +114,18 @@ public class TripsController(
             ? await tripQueryService.Handle(new GetAllTripsQuery(), cancellationToken)
             : await tripQueryService.Handle(new GetTripsByRouteIdQuery(routeId.Value), cancellationToken);
 
+        // A driver only sees their own trips.
+        if (caller.IsDriver)
+        {
+            var own = await caller.GetDriverIdAsync(cancellationToken);
+            trips = trips.Where(t => t.DriverId.Identifier == own).ToList();
+        }
+
         return Ok(trips.Select(TripResourceFromEntityAssembler.ToResourceFromEntity));
     }
     
     /// <summary>Records a child's boarding status during a trip.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost("{tripId:guid}/boarding")]
     [SwaggerOperation("Record Boarding", "Records a child's boarding status during a trip.",
         OperationId = "RecordBoarding")]
@@ -101,6 +135,8 @@ public class TripsController(
     public async Task<IActionResult> RecordBoarding(Guid tripId, SetBoardingStatusResource resource,
         CancellationToken cancellationToken)
     {
+        var denied = await DriverOwnsTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
         var command = SetBoardingStatusCommandFromResourceAssembler.ToCommandFromResource(tripId, resource);
         var result = await tripCommandService.Handle(command, cancellationToken);
         return TripActionResultAssembler.ToActionResult(this, result, problemDetailsFactory,
@@ -108,6 +144,7 @@ public class TripsController(
     }
 
     /// <summary>Reports an incident during a trip.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost("{tripId:guid}/incidents")]
     [SwaggerOperation("Report Incident", "Reports an incident during a trip.", OperationId = "ReportIncident")]
     [SwaggerResponse(200, "The incident was reported.", typeof(TripResource))]
@@ -116,6 +153,8 @@ public class TripsController(
     public async Task<IActionResult> ReportIncident(Guid tripId, ReportIncidentResource resource,
         CancellationToken cancellationToken)
     {
+        var denied = await DriverOwnsTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
         var command = ReportIncidentCommandFromResourceAssembler.ToCommandFromResource(tripId, resource);
         var result = await tripCommandService.Handle(command, cancellationToken);
         return TripActionResultAssembler.ToActionResult(this, result, problemDetailsFactory,
@@ -123,6 +162,7 @@ public class TripsController(
     }    
     
     /// <summary>Completes an in-progress trip.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpPost("{tripId:guid}/complete")]
     [SwaggerOperation("Complete Trip", "Completes an in-progress trip.", OperationId = "CompleteTrip")]
     [SwaggerResponse(200, "The trip was completed.", typeof(TripResource))]
@@ -130,6 +170,8 @@ public class TripsController(
     [SwaggerResponse(409, "The trip is not in progress.")]
     public async Task<IActionResult> CompleteTrip(Guid tripId, CancellationToken cancellationToken)
     {
+        var denied = await DriverOwnsTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
         var result = await tripCommandService.Handle(new CompleteTripCommand(tripId), cancellationToken);
         return TripActionResultAssembler.ToActionResult(this, result, problemDetailsFactory,
             trip => Ok(TripResourceFromEntityAssembler.ToResourceFromEntity(trip)));

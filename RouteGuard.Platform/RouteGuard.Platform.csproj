@@ -23,6 +23,8 @@
       <PackageReference Include="Microsoft.EntityFrameworkCore.Relational.Design" Version="1.1.6" />
       <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.18.0" />
       <PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.7" />
+      <!-- Pinned above the transitive 2.4.1 pulled by Swashbuckle (GHSA-v5pm-xwqc-g5wc, fixed in 2.7.5) -->
+      <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.0" />
       <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.2.0" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
@@ -21,6 +23,7 @@ public class StudentGroupsController(
     IStudentGroupQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> CreateGroup(CreateStudentGroupResource resource,
         CancellationToken cancellationToken)
@@ -32,6 +35,7 @@ public class StudentGroupsController(
                 StakeholderResourceFromEntityAssembler.ToResourceFromEntity(group)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet("{studentGroupId:guid}")]
     public async Task<IActionResult> GetGroupById(Guid studentGroupId, CancellationToken cancellationToken)
     {
@@ -42,6 +46,7 @@ public class StudentGroupsController(
         return Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(group));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet]
     public async Task<IActionResult> GetGroups(CancellationToken cancellationToken)
     {
@@ -49,6 +54,7 @@ public class StudentGroupsController(
         return Ok(groups.Select(StakeholderResourceFromEntityAssembler.ToResourceFromEntity));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{studentGroupId:guid}/children")]
     public async Task<IActionResult> AddChild(Guid studentGroupId, GroupChildResource resource,
         CancellationToken cancellationToken)
@@ -59,6 +65,7 @@ public class StudentGroupsController(
             group => Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(group)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{studentGroupId:guid}/children/{childId:guid}")]
     public async Task<IActionResult> RemoveChild(Guid studentGroupId, Guid childId,
         CancellationToken cancellationToken)
@@ -69,6 +76,7 @@ public class StudentGroupsController(
             group => Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(group)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{studentGroupId:guid}/finalize")]
     public async Task<IActionResult> FinalizeGroup(Guid studentGroupId, CancellationToken cancellationToken)
     {

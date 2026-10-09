@@ -1,3 +1,4 @@
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,12 +21,30 @@ namespace RouteGuard.Platform.IdentityAccessManagement.Interfaces.Rest;
 public class UsersController(
     IUserCommandService commandService,
     IUserQueryService queryService,
-    ProblemDetailsFactory problemDetailsFactory) : ControllerBase
+    ProblemDetailsFactory problemDetailsFactory,
+    CallerContext caller) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost]
     [SwaggerOperation(Summary = "Sign up", Description = "Registers a new user account.", OperationId = "SignUp")]
     public async Task<IActionResult> SignUp(SignUpResource resource, CancellationToken cancellationToken)
     {
+        // Accounts are created by the administrator of the organization. The only anonymous sign-up allowed is the
+        // first ADMIN of a newly registered organization (the "register administrator" flow of the app).
+        if (caller.IsAdmin)
+        {
+            if (caller.OrganizationId is { } callerOrganization && resource.OrganizationId != callerOrganization)
+                return Forbid();
+        }
+        else
+        {
+            var isFirstAdmin = string.Equals(resource.RoleTier, AppRoles.Admin, StringComparison.OrdinalIgnoreCase) &&
+                               resource.OrganizationId is { } organizationId &&
+                               !(await queryService.Handle(new GetAllUsersQuery(), cancellationToken))
+                                   .Any(u => u.OrganizationId != null && u.OrganizationId.Identifier == organizationId);
+            if (!isFirstAdmin) return caller.IsAuthenticated ? Forbid() : Unauthorized();
+        }
+
         var result = await commandService.Handle(new SignUpCommand(resource.FirstName, resource.LastName,
             resource.Email, resource.Password, resource.RoleTier, resource.OrganizationId), cancellationToken);
         return IamActionResultAssembler.ToActionResult(this, result, problemDetailsFactory,
@@ -33,6 +52,7 @@ public class UsersController(
                 IamResourceFromEntityAssembler.ToResourceFromEntity(user)));
     }
 
+    [AllowAnonymous]
     [HttpPost("sign-in")]
     [SwaggerOperation(Summary = "Sign in", Description = "Authenticates a user and issues a JWT.",
         OperationId = "SignIn")]
@@ -45,11 +65,13 @@ public class UsersController(
                 authenticated.User, authenticated.Token)));
     }
 
-    [Authorize]
+    [Authorize(Roles = AppRoles.Any)]
     [HttpGet("{userId:guid}")]
     [SwaggerOperation(Summary = "Get a user by id", OperationId = "GetUserById")]
     public async Task<IActionResult> GetUserById(Guid userId, CancellationToken cancellationToken)
     {
+        if (!caller.IsAdmin && caller.UserId != userId) return Forbid();
+
         var user = await queryService.Handle(new GetUserByIdQuery(userId), cancellationToken);
         if (user is null)
             return problemDetailsFactory.CreateProblemDetails(this, StatusCodes.Status404NotFound,
@@ -57,7 +79,7 @@ public class UsersController(
         return Ok(IamResourceFromEntityAssembler.ToResourceFromEntity(user));
     }
 
-    [Authorize]
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet]
     [SwaggerOperation(Summary = "Get all users", OperationId = "GetAllUsers")]
     public async Task<IActionResult> GetAllUsers(CancellationToken cancellationToken)
