@@ -13,5 +13,7 @@ RUN dotnet publish ./RouteGuard.Platform -c Release -o out
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=builder /app/out .
+# Listen on 8080 (set WEBSITES_PORT=8080 in Azure App Service)
+ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "RouteGuard.Platform.dll"]

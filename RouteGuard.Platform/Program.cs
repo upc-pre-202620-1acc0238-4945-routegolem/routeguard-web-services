@@ -69,6 +69,10 @@ using RouteGuard.Platform.TripExecutionMonitoring.Domain.Repositories;
 using RouteGuard.Platform.TripExecutionMonitoring.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 using RouteGuard.Platform.TripExecutionMonitoring.Infrastructure.Repositories;
 
+// Keep DateTime values as 'timestamp without time zone' (as with MySQL) so a DateTime with an unspecified Kind
+// (e.g. one coming from a JSON request) is not rejected by Npgsql.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------------------------------------------------------------------------
@@ -99,7 +103,7 @@ builder.Services.AddCors(options =>
 });
 
 // ---------------------------------------------------------------------------
-// Database (MySQL via EF Core)
+// Database (PostgreSQL via EF Core / Npgsql)
 // ---------------------------------------------------------------------------
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
@@ -109,7 +113,7 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 
     var connectionString = Environment.ExpandEnvironmentVariables(connectionStringTemplate);
 
-    options.UseMySQL(connectionString)
+    options.UseNpgsql(connectionString)
         .UseLoggerFactory(serviceProvider.GetRequiredService<ILoggerFactory>())
         .EnableDetailedErrors();
 

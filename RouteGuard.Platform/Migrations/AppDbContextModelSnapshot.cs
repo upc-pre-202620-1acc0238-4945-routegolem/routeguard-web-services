@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 
 #nullable disable
@@ -17,35 +18,37 @@ namespace RouteGuard.Platform.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Aggregates.Route", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("DepartureTime")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("departure_time");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("varchar(120)")
+                        .HasColumnType("character varying(120)")
                         .HasColumnName("name");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.Property<string>("ServiceDays")
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("service_days");
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("state");
 
                     b.HasKey("Id")
@@ -57,27 +60,27 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.IdentityAccessManagement.Domain.Model.Aggregates.Organization", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("varchar(150)")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("name");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("status");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -89,37 +92,37 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.IdentityAccessManagement.Domain.Model.Aggregates.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("email");
 
                     b.Property<Guid?>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("password_hash");
 
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("role");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -135,17 +138,17 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Aggregates.Notification", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("category");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("DataPayload")
@@ -155,64 +158,64 @@ namespace RouteGuard.Platform.Migrations
                     b.Property<string>("DeliveryState")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("delivery_state");
 
                     b.Property<string>("DevicePlatform")
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("device_platform");
 
                     b.Property<DateTimeOffset?>("DispatchedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("dispatched_at");
 
                     b.Property<string>("FailureReason")
                         .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("failure_reason");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("message");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.Property<Guid>("ParentId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("parent_id");
 
                     b.Property<string>("PriorityLevel")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("priority_level");
 
                     b.Property<string>("RecipientToken")
                         .HasMaxLength(512)
-                        .HasColumnType("varchar(512)")
+                        .HasColumnType("character varying(512)")
                         .HasColumnName("recipient_token");
 
                     b.Property<DateTimeOffset>("SentAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("sent_at");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("title");
 
                     b.Property<Guid>("TripId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("trip_id");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -224,43 +227,43 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.DeviceToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
                     b.Property<DateTimeOffset?>("LastUsedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_used_at");
 
                     b.Property<string>("Platform")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("platform");
 
                     b.Property<DateTimeOffset>("RegisteredAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("registered_at");
 
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("varchar(512)")
+                        .HasColumnType("character varying(512)")
                         .HasColumnName("token");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
@@ -279,47 +282,47 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.GeofenceAlert", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("AlertType")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("alert_type");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<double>("Latitude")
                         .HasPrecision(10, 7)
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("latitude");
 
                     b.Property<double>("Longitude")
                         .HasPrecision(10, 7)
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
                     b.Property<Guid>("NotificationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("notification_id");
 
                     b.Property<Guid?>("StudentId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("student_id");
 
                     b.Property<DateTimeOffset>("TriggeredAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("triggered_at");
 
                     b.Property<Guid>("TripId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("trip_id");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -334,7 +337,7 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.NotificationTemplate", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("BodyTemplate")
@@ -343,29 +346,29 @@ namespace RouteGuard.Platform.Migrations
                         .HasColumnName("body_template");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Locale")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("locale");
 
                     b.Property<string>("TitleTemplate")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("title_template");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("varchar(80)")
+                        .HasColumnType("character varying(80)")
                         .HasColumnName("type");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -381,33 +384,33 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.VehicleCatalogItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<int>("Capacity")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("capacity");
 
                     b.Property<string>("Model")
                         .IsRequired()
                         .HasMaxLength(80)
-                        .HasColumnType("varchar(80)")
+                        .HasColumnType("character varying(80)")
                         .HasColumnName("model");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.Property<string>("Plate")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("plate");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("status");
 
                     b.HasKey("Id")
@@ -419,27 +422,27 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Aggregates.Parent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("email");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("phone_number");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
@@ -451,37 +454,37 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.Driver", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<bool>("Available")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("available");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("email");
 
                     b.Property<string>("LicenseNumber")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("license_number");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("phone_number");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
@@ -493,26 +496,26 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.StudentGroup", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("ChildIds")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("child_ids");
 
                     b.Property<bool>("IsFinalizedValue")
-                        .HasColumnType("tinyint(1)")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_finalized_value");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.HasKey("Id")
@@ -524,26 +527,26 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.SubscriptionPlanManagement.Domain.Model.Aggregates.Plan", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<int>("DriverQuota")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("driver_quota");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)")
+                        .HasColumnType("numeric(10,2)")
                         .HasColumnName("price");
 
                     b.Property<int>("RouteQuota")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("route_quota");
 
                     b.Property<string>("Tier")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("tier");
 
                     b.HasKey("Id")
@@ -555,29 +558,29 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.SubscriptionPlanManagement.Domain.Model.Aggregates.Subscription", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("EndDate")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("end_date");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.Property<Guid>("PlanId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("plan_id");
 
                     b.Property<DateTimeOffset>("StartDate")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
 
                     b.Property<string>("State")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("state");
 
                     b.HasKey("Id")
@@ -592,44 +595,44 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset?>("CancelledAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("cancelled_at");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<Guid>("DriverId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("driver_id");
 
                     b.Property<DateTimeOffset?>("EndTime")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("end_time");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
                     b.Property<Guid>("RouteId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("route_id");
 
                     b.Property<DateTimeOffset?>("StartTime")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_time");
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("state");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
@@ -641,41 +644,41 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.LocationRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<int>("BatteryLevel")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("battery_level");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<double>("Heading")
                         .HasPrecision(10, 2)
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("heading");
 
                     b.Property<double>("Latitude")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("latitude");
 
                     b.Property<double>("Longitude")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
                     b.Property<DateTimeOffset>("RecordedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("recorded_at");
 
                     b.Property<double>("SpeedKmh")
                         .HasPrecision(10, 2)
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("speed_kmh");
 
                     b.Property<Guid>("TripId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("trip_id");
 
                     b.HasKey("Id")
@@ -690,11 +693,11 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.OfflineSyncBatch", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("RawPayload")
@@ -703,15 +706,15 @@ namespace RouteGuard.Platform.Migrations
                         .HasColumnName("raw_payload");
 
                     b.Property<DateTimeOffset>("SyncedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("synced_at");
 
                     b.Property<int>("SyncedRecordsCount")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("synced_records_count");
 
                     b.Property<Guid>("TripId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("trip_id");
 
                     b.HasKey("Id")
@@ -726,51 +729,51 @@ namespace RouteGuard.Platform.Migrations
             modelBuilder.Entity("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Waypoint", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("id");
 
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasMaxLength(250)
-                        .HasColumnType("varchar(250)")
+                        .HasColumnType("character varying(250)")
                         .HasColumnName("address");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<double>("Latitude")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("latitude");
 
                     b.Property<double>("Longitude")
-                        .HasColumnType("double")
+                        .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
                     b.Property<int>("OrderIndex")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("order_index");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("varchar(30)")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("status");
 
                     b.Property<Guid?>("StudentId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("student_id");
 
                     b.Property<Guid>("TripId")
-                        .HasColumnType("char(36)")
+                        .HasColumnType("uuid")
                         .HasColumnName("trip_id");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.Property<DateTimeOffset?>("VisitedAt")
-                        .HasColumnType("datetime")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("visited_at");
 
                     b.HasKey("Id")
@@ -787,20 +790,20 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsOne("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Entities.Assignment", "Assignment", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("ChildIds")
                                 .IsRequired()
-                                .HasColumnType("longtext")
+                                .HasColumnType("text")
                                 .HasColumnName("child_ids");
 
                             b1.Property<Guid>("DriverId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("driver_id");
 
                             b1.Property<Guid>("RouteId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("route_id");
 
                             b1.HasKey("Id")
@@ -820,21 +823,21 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsMany("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Entities.Stop", "Stops", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasMaxLength(120)
-                                .HasColumnType("varchar(120)")
+                                .HasColumnType("character varying(120)")
                                 .HasColumnName("name");
 
                             b1.Property<int>("Order")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("order");
 
                             b1.Property<Guid>("RouteId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("route_id");
 
                             b1.HasKey("Id")
@@ -852,15 +855,15 @@ namespace RouteGuard.Platform.Migrations
                             b1.OwnsOne("RouteGuard.Platform.Shared.Domain.Model.ValueObjects.Coordinates", "Coordinates", b2 =>
                                 {
                                     b2.Property<Guid>("Id")
-                                        .HasColumnType("char(36)")
+                                        .HasColumnType("uuid")
                                         .HasColumnName("id");
 
                                     b2.Property<double>("Latitude")
-                                        .HasColumnType("double")
+                                        .HasColumnType("double precision")
                                         .HasColumnName("latitude");
 
                                     b2.Property<double>("Longitude")
-                                        .HasColumnType("double")
+                                        .HasColumnType("double precision")
                                         .HasColumnName("longitude");
 
                                     b2.HasKey("Id")
@@ -880,37 +883,37 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsOne("RouteGuard.Platform.FleetRouteManagement.Domain.Model.Entities.Vehicle", "Vehicle", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Brand")
                                 .IsRequired()
                                 .HasMaxLength(80)
-                                .HasColumnType("varchar(80)")
+                                .HasColumnType("character varying(80)")
                                 .HasColumnName("brand");
 
                             b1.Property<int>("Capacity")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("capacity");
 
                             b1.Property<string>("Model")
                                 .IsRequired()
                                 .HasMaxLength(80)
-                                .HasColumnType("varchar(80)")
+                                .HasColumnType("character varying(80)")
                                 .HasColumnName("model");
 
                             b1.Property<Guid>("OrganizationId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("organization_id");
 
                             b1.Property<string>("Plate")
                                 .IsRequired()
                                 .HasMaxLength(20)
-                                .HasColumnType("varchar(20)")
+                                .HasColumnType("character varying(20)")
                                 .HasColumnName("plate");
 
                             b1.Property<Guid>("RouteId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("route_id");
 
                             b1.HasKey("Id")
@@ -939,19 +942,19 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsOne("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.FullName", "FullName", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("FirstName")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("varchar(100)")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("first_name");
 
                             b1.Property<string>("LastName")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("varchar(100)")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("last_name");
 
                             b1.HasKey("Id")
@@ -973,23 +976,23 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsMany("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.Alert", "Alerts", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<Guid>("NotificationId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("notification_id");
 
                             b1.Property<Guid>("OwnerNotificationId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("owner_notification_id");
 
                             b1.Property<bool>("Panic")
-                                .HasColumnType("tinyint(1)")
+                                .HasColumnType("boolean")
                                 .HasColumnName("panic");
 
                             b1.Property<DateTimeOffset>("TriggeredAt")
-                                .HasColumnType("datetime")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("triggered_at");
 
                             b1.HasKey("Id")
@@ -1008,29 +1011,29 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsMany("RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities.Announcement", "Announcements", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Message")
                                 .IsRequired()
                                 .HasMaxLength(1000)
-                                .HasColumnType("varchar(1000)")
+                                .HasColumnType("character varying(1000)")
                                 .HasColumnName("message");
 
                             b1.Property<Guid>("NotificationId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("notification_id");
 
                             b1.Property<Guid>("OwnerNotificationId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("owner_notification_id");
 
                             b1.Property<DateTimeOffset>("PublishedAt")
-                                .HasColumnType("datetime")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("published_at");
 
                             b1.Property<Guid>("RouteId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("route_id");
 
                             b1.HasKey("Id")
@@ -1076,19 +1079,19 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsOne("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.FullName", "FullName", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("FirstName")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("varchar(100)")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("first_name");
 
                             b1.Property<string>("LastName")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("varchar(100)")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("last_name");
 
                             b1.HasKey("Id")
@@ -1104,21 +1107,21 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsMany("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.Child", "Children", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<int>("Age")
-                                .HasColumnType("int")
+                                .HasColumnType("integer")
                                 .HasColumnName("age");
 
                             b1.Property<string>("EnrollmentState")
                                 .IsRequired()
                                 .HasMaxLength(20)
-                                .HasColumnType("varchar(20)")
+                                .HasColumnType("character varying(20)")
                                 .HasColumnName("enrollment_state");
 
                             b1.Property<Guid>("ParentId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("parent_id");
 
                             b1.HasKey("Id")
@@ -1136,19 +1139,19 @@ namespace RouteGuard.Platform.Migrations
                             b1.OwnsOne("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.FullName", "FullName", b2 =>
                                 {
                                     b2.Property<Guid>("Id")
-                                        .HasColumnType("char(36)")
+                                        .HasColumnType("uuid")
                                         .HasColumnName("id");
 
                                     b2.Property<string>("FirstName")
                                         .IsRequired()
                                         .HasMaxLength(100)
-                                        .HasColumnType("varchar(100)")
+                                        .HasColumnType("character varying(100)")
                                         .HasColumnName("first_name");
 
                                     b2.Property<string>("LastName")
                                         .IsRequired()
                                         .HasMaxLength(100)
-                                        .HasColumnType("varchar(100)")
+                                        .HasColumnType("character varying(100)")
                                         .HasColumnName("last_name");
 
                                     b2.HasKey("Id")
@@ -1176,19 +1179,19 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsOne("RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities.FullName", "FullName", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("FirstName")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("varchar(100)")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("first_name");
 
                             b1.Property<string>("LastName")
                                 .IsRequired()
                                 .HasMaxLength(100)
-                                .HasColumnType("varchar(100)")
+                                .HasColumnType("character varying(100)")
                                 .HasColumnName("last_name");
 
                             b1.HasKey("Id")
@@ -1220,24 +1223,24 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsMany("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Attendance", "Attendances", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<DateTimeOffset?>("BoardedAt")
-                                .HasColumnType("datetime")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("boarded_at");
 
                             b1.Property<string>("BoardingState")
                                 .IsRequired()
-                                .HasColumnType("longtext")
+                                .HasColumnType("text")
                                 .HasColumnName("boarding_state");
 
                             b1.Property<Guid>("ChildId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("child_id");
 
                             b1.Property<Guid>("TripId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("trip_id");
 
                             b1.HasKey("Id")
@@ -1256,21 +1259,21 @@ namespace RouteGuard.Platform.Migrations
                     b.OwnsMany("RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities.Incident", "Incidents", b1 =>
                         {
                             b1.Property<Guid>("Id")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Description")
                                 .IsRequired()
                                 .HasMaxLength(500)
-                                .HasColumnType("varchar(500)")
+                                .HasColumnType("character varying(500)")
                                 .HasColumnName("description");
 
                             b1.Property<DateTimeOffset>("ReportedAt")
-                                .HasColumnType("datetime")
+                                .HasColumnType("timestamp with time zone")
                                 .HasColumnName("reported_at");
 
                             b1.Property<Guid>("TripId")
-                                .HasColumnType("char(36)")
+                                .HasColumnType("uuid")
                                 .HasColumnName("trip_id");
 
                             b1.HasKey("Id")
