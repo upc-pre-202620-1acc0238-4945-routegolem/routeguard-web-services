@@ -75,6 +75,11 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
+FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
+{
+    Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile("firebase-adminsdk.json"),
+});
+
 // ---------------------------------------------------------------------------
 // Routing & Controllers
 // ---------------------------------------------------------------------------
