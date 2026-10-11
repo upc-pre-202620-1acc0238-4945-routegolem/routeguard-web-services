@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +28,7 @@ public class RouteCompatibilityController(
     AppDbContext context,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{routeId:guid}")]
     [SwaggerOperation("Update Route", "Updates a route record and its current configuration.",
         OperationId = "UpdateRouteCompatibility")]
@@ -63,6 +66,7 @@ public class RouteCompatibilityController(
         return Ok(BuildRouteResource(route, resource));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{routeId:guid}")]
     [SwaggerOperation("Delete Route", "Deletes a route and dependent records used by the web application.",
         OperationId = "DeleteRouteCompatibility")]
@@ -76,14 +80,14 @@ public class RouteCompatibilityController(
 
         var routeValue = new RouteId(routeId);
         var trips = await context.Set<TripAggregate>()
-            .Where(trip => trip.RouteId.Identifier == routeValue.Identifier)
+            .Where(trip => trip.RouteId == new RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects.RouteId(routeValue.Identifier))
             .ToListAsync(cancellationToken);
-        var tripIds = trips.Select(trip => trip.Id.Identifier).ToHashSet();
+        var tripIds = trips.Select(trip => new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.TripId(trip.Id.Identifier)).ToHashSet();
 
         if (tripIds.Count > 0)
         {
             var notifications = await context.Set<Notification>()
-                .Where(notification => tripIds.Contains(notification.TripId.Identifier))
+                .Where(notification => tripIds.Contains(notification.TripId))
                 .ToListAsync(cancellationToken);
             context.RemoveRange(notifications);
         }

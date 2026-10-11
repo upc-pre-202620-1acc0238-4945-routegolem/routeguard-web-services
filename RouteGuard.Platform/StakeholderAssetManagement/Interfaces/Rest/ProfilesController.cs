@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
@@ -20,6 +22,7 @@ public class ProfilesController(
     IDriverQueryService driverQueryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet]
     public async Task<IActionResult> GetProfiles(CancellationToken cancellationToken)
     {
@@ -32,6 +35,7 @@ public class ProfilesController(
         return Ok(profiles);
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet("{profileId:guid}")]
     public async Task<IActionResult> GetProfileById(Guid profileId, CancellationToken cancellationToken)
     {

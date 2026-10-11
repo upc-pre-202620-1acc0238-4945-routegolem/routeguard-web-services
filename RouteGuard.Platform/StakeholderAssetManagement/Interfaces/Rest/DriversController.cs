@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
@@ -19,8 +21,10 @@ namespace RouteGuard.Platform.StakeholderAssetManagement.Interfaces.Rest;
 public class DriversController(
     IDriverCommandService commandService,
     IDriverQueryService queryService,
-    ProblemDetailsFactory problemDetailsFactory) : ControllerBase
+    ProblemDetailsFactory problemDetailsFactory,
+    CallerContext caller) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> CreateDriver(CreateDriverResource resource, CancellationToken cancellationToken)
     {
@@ -32,9 +36,12 @@ public class DriversController(
                 StakeholderResourceFromEntityAssembler.ToResourceFromEntity(driver)));
     }
 
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpGet("{driverId:guid}")]
     public async Task<IActionResult> GetDriverById(Guid driverId, CancellationToken cancellationToken)
     {
+        // A driver can only read their own profile.
+        if (caller.IsDriver && await caller.GetDriverIdAsync(cancellationToken) != driverId) return Forbid();
         var driver = await queryService.Handle(new GetDriverByIdQuery(driverId), cancellationToken);
         if (driver is null)
             return problemDetailsFactory.CreateProblemDetails(this, StatusCodes.Status404NotFound,
@@ -42,13 +49,22 @@ public class DriversController(
         return Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(driver));
     }
 
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpGet]
     public async Task<IActionResult> GetDrivers(CancellationToken cancellationToken)
     {
         var drivers = await queryService.Handle(new GetAllDriversQuery(), cancellationToken);
+        // A driver only sees their own profile (the app uses this list to find the driver id of the account).
+        if (caller.IsDriver)
+        {
+            var own = await caller.GetDriverIdAsync(cancellationToken);
+            drivers = drivers.Where(d => d.Id.Identifier == own).ToList();
+        }
+
         return Ok(drivers.Select(StakeholderResourceFromEntityAssembler.ToResourceFromEntity));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{driverId:guid}")]
     public async Task<IActionResult> UpdateDriver(Guid driverId, CreateDriverResource resource,
         CancellationToken cancellationToken)
@@ -59,6 +75,7 @@ public class DriversController(
             driver => Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(driver)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{driverId:guid}")]
     public async Task<IActionResult> DeleteDriver(Guid driverId, CancellationToken cancellationToken)
     {
@@ -67,6 +84,7 @@ public class DriversController(
             driver => Ok(StakeholderResourceFromEntityAssembler.ToResourceFromEntity(driver)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{driverId:guid}/phone-number")]
     public async Task<IActionResult> UpdatePhone(Guid driverId, UpdateDriverPhoneResource resource,
         CancellationToken cancellationToken)

@@ -31,12 +31,12 @@ public class NotificationRepository(AppDbContext context)
 
     public async Task<IEnumerable<Notification>> FindByParentIdAsync(Guid parentId)
     {
-        var parentNotificationId = new NotificationId(parentId);
+        var parentIdVo = new ParentId(parentId);
         return await Context.Set<Notification>()
             .Include(n => n.Alerts)
             .Include(n => n.Announcements)
             .AsSplitQuery()
-            .Where(n => n.ParentId.Identifier == parentNotificationId.Identifier)
+            .Where(n => n.ParentId == parentIdVo)
             .ToListAsync();
     }
 }

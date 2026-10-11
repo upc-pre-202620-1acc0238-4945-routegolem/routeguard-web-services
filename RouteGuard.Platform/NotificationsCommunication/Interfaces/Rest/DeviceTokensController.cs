@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,12 +24,15 @@ public record DeviceTokenResource(Guid Id, Guid UserId, string Platform, bool Is
 [Route("api/v1/users/{userId:guid}/device-tokens")]
 [Produces(MediaTypeNames.Application.Json)]
 [SwaggerTag("Push device tokens of a user.")]
-public class DeviceTokensController(AppDbContext context) : ControllerBase
+public class DeviceTokensController(AppDbContext context, CallerContext caller) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Any)]
     [HttpPost]
     public async Task<IActionResult> Register(Guid userId, RegisterDeviceTokenResource resource,
         CancellationToken cancellationToken)
     {
+        if (!caller.IsAdmin && caller.UserId != userId) return Forbid();
+
         if (string.IsNullOrWhiteSpace(resource.Token))
             return BadRequest(new { title = "The device token cannot be empty." });
 
@@ -54,18 +59,24 @@ public class DeviceTokensController(AppDbContext context) : ControllerBase
         return Ok(ToResource(existing));
     }
 
+    [Authorize(Roles = AppRoles.Any)]
     [HttpGet]
     public async Task<IActionResult> GetByUser(Guid userId, CancellationToken cancellationToken)
     {
+        if (!caller.IsAdmin && caller.UserId != userId) return Forbid();
+
         var id = new UserId(userId);
         var tokens = await context.Set<DeviceToken>().AsNoTracking().Where(d => d.UserId == id)
             .ToListAsync(cancellationToken);
         return Ok(tokens.Select(ToResource));
     }
 
+    [Authorize(Roles = AppRoles.Any)]
     [HttpDelete("{deviceTokenId:guid}")]
     public async Task<IActionResult> Deactivate(Guid userId, Guid deviceTokenId, CancellationToken cancellationToken)
     {
+        if (!caller.IsAdmin && caller.UserId != userId) return Forbid();
+
         var id = new UserId(userId);
         var token = await context.Set<DeviceToken>()
             .FirstOrDefaultAsync(d => d.Id == deviceTokenId && d.UserId == id, cancellationToken);

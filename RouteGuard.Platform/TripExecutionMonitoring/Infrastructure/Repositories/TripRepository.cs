@@ -3,6 +3,7 @@ using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Repositories;
+using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Entities;
 using RouteId = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects.RouteId;
 using TripAggregate = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip;
 
@@ -35,5 +36,11 @@ public class TripRepository(AppDbContext context)
         return await Context.Set<TripAggregate>()
             .Where(trip => trip.RouteId == routeId)
             .ToListAsync(cancellationToken);
+    }
+    
+    /// <inheritdoc />
+    public async Task AddSyncBatchAsync(OfflineSyncBatch batch, CancellationToken cancellationToken)
+    {
+        await Context.Set<OfflineSyncBatch>().AddAsync(batch, cancellationToken);
     }
 }

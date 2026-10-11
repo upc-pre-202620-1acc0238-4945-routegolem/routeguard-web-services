@@ -19,15 +19,21 @@ public static class SubscriptionSeeder
 {
     private static readonly Guid CompletePlanId = Guid.Parse("c0000000-0000-0000-0000-000000000003");
 
+    /// <summary>Plan catalog (reference data): needed in every environment, including production.</summary>
+    public static async Task SeedPlansAsync(AppDbContext context, CancellationToken cancellationToken = default)
+    {
+        if (await context.Set<Plan>().AnyAsync(cancellationToken)) return;
+
+        AddPlan(context, "c0000000-0000-0000-0000-000000000001", PlanTier.Basic, 2, 2, 9.99m);
+        AddPlan(context, "c0000000-0000-0000-0000-000000000002", PlanTier.Intermediate, 6, 6, 24.99m);
+        AddPlan(context, CompletePlanId.ToString(), PlanTier.Complete, 20, 20, 49.99m);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>Plan catalog plus the demo subscription of the demo organization (development only).</summary>
     public static async Task SeedAsync(AppDbContext context, CancellationToken cancellationToken = default)
     {
-        if (!await context.Set<Plan>().AnyAsync(cancellationToken))
-        {
-            AddPlan(context, "c0000000-0000-0000-0000-000000000001", PlanTier.Basic, 2, 2, 9.99m);
-            AddPlan(context, "c0000000-0000-0000-0000-000000000002", PlanTier.Intermediate, 6, 6, 24.99m);
-            AddPlan(context, CompletePlanId.ToString(), PlanTier.Complete, 20, 20, 49.99m);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+        await SeedPlansAsync(context, cancellationToken);
 
         if (!await context.Set<Domain.Model.Aggregates.Subscription>().AnyAsync(cancellationToken))
         {

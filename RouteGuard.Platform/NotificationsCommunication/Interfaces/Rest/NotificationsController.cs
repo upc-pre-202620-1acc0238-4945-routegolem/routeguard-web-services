@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.NotificationsCommunication.Application.CommandServices;
@@ -18,8 +20,10 @@ namespace RouteGuard.Platform.NotificationsCommunication.Interfaces.Rest;
 public class NotificationsController(
     INotificationCommandService commandService,
     INotificationQueryService queryService,
-    ProblemDetailsFactory problemDetailsFactory) : ControllerBase
+    ProblemDetailsFactory problemDetailsFactory,
+    CallerContext caller) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> CreateNotification([FromBody] CreateNotificationResource resource, CancellationToken cancellationToken)
     {
@@ -31,6 +35,7 @@ public class NotificationsController(
                 NotificationResourceFromEntityAssembler.ToResourceFromEntity(notification)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet("{notificationId:guid}")]
     public async Task<IActionResult> GetNotificationById(Guid notificationId, CancellationToken cancellationToken)
     {
@@ -39,10 +44,19 @@ public class NotificationsController(
         return Ok(NotificationResourceFromEntityAssembler.ToResourceFromEntity(notification));
     }
 
+    [Authorize(Roles = AppRoles.Any)]
     [HttpGet]
     public async Task<IActionResult> GetNotifications([FromQuery] Guid? parentId, CancellationToken cancellationToken)
     {
         IEnumerable<RouteGuard.Platform.NotificationsCommunication.Domain.Model.Aggregates.Notification> notifications;
+        // A parent only receives their own notifications, whatever filter they send.
+        if (caller.IsParent)
+        {
+            var own = await caller.GetParentIdAsync(cancellationToken);
+            if (own is null || (parentId.HasValue && parentId != own)) return Forbid();
+            parentId = own;
+        }
+
         if (parentId.HasValue)
         {
             notifications = await queryService.Handle(new GetNotificationsByParentIdQuery(parentId.Value), cancellationToken);
@@ -56,6 +70,7 @@ public class NotificationsController(
         return Ok(resources);
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{notificationId:guid}/dispatch")]
     public async Task<IActionResult> Dispatch(Guid notificationId, CancellationToken cancellationToken)
     {
@@ -64,6 +79,7 @@ public class NotificationsController(
             notification => Ok(NotificationResourceFromEntityAssembler.ToResourceFromEntity(notification)));
     }
 
+    [Authorize(Roles = AppRoles.Any)]
     [HttpPost("{notificationId:guid}/delivered")]
     public async Task<IActionResult> MarkDelivered(Guid notificationId, CancellationToken cancellationToken)
     {
@@ -72,6 +88,7 @@ public class NotificationsController(
             notification => Ok(NotificationResourceFromEntityAssembler.ToResourceFromEntity(notification)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{notificationId:guid}/alerts")]
     public async Task<IActionResult> TriggerAlert(Guid notificationId, [FromBody] TriggerAlertResource resource, CancellationToken cancellationToken)
     {
@@ -80,6 +97,7 @@ public class NotificationsController(
             notification => Ok(NotificationResourceFromEntityAssembler.ToResourceFromEntity(notification)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{notificationId:guid}/announcements")]
     public async Task<IActionResult> PublishAnnouncement(Guid notificationId, [FromBody] PublishAnnouncementResource resource, CancellationToken cancellationToken)
     {

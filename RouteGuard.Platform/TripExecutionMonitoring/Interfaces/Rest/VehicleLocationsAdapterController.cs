@@ -1,4 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
+using System.Security.Cryptography;
+using System.Text;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.NotificationsCommunication.Application.CommandServices;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
@@ -27,8 +32,13 @@ public class VehicleLocationsAdapterController(
     ITripQueryService tripQueryService,
     AppDbContext context,
     ITripCommandService tripCommandService,
-    INotificationCommandService notificationCommandService) : ControllerBase
+    INotificationCommandService notificationCommandService,
+    IPublishEndpoint publishEndpoint,
+    CallerContext caller,
+    IConfiguration configuration,
+    IWebHostEnvironment environment) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost]
     [SwaggerOperation("Record Legacy Vehicle Location", "Adapts legacy vehicle location payloads to the new Trip-centric tracking.", OperationId = "RecordLegacyVehicleLocation")]
     [SwaggerResponse(202, "The location was accepted.")]
@@ -38,6 +48,22 @@ public class VehicleLocationsAdapterController(
         [FromBody] LegacyVehicleLocationResource resource, 
         CancellationToken cancellationToken)
     {
+        // The hardware has no user session: it authenticates with a shared API key (header X-Api-Key). Without a
+        // configured key the endpoint only works in Development, so it is never open in a deployed environment.
+        var configuredKey = configuration["HardwareAdapter:ApiKey"];
+        if (string.IsNullOrWhiteSpace(configuredKey))
+        {
+            if (!environment.IsDevelopment())
+                return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                    new { title = "HardwareAdapter:ApiKey is not configured." });
+        }
+        else if (!Request.Headers.TryGetValue("X-Api-Key", out var provided) ||
+                 !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(provided.ToString()),
+                     Encoding.UTF8.GetBytes(configuredKey)))
+        {
+            return Unauthorized();
+        }
+
         if (!Guid.TryParse(resource.VehicleId, out var vehicleIdGuid))
         {
             return Problem(title: "Invalid VehicleId format. Must be a Guid.", statusCode: 400);
@@ -45,7 +71,7 @@ public class VehicleLocationsAdapterController(
 
         var route = await context.Set<RouteAggregate>()
             .Include(r => r.Vehicle)
-            .FirstOrDefaultAsync(r => r.Vehicle != null && r.Vehicle.Id.Identifier == vehicleIdGuid, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Vehicle != null && r.Vehicle.Id == new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.VehicleId(vehicleIdGuid), cancellationToken);
         
         if (route == null)
         {
@@ -69,7 +95,7 @@ public class VehicleLocationsAdapterController(
             0.0, 
             DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
 
-        var trackingController = new TripTrackingController(context, tripCommandService, notificationCommandService)
+        var trackingController = new TripTrackingController(context, tripCommandService, notificationCommandService, publishEndpoint, caller)
         {
             ControllerContext = this.ControllerContext
         };

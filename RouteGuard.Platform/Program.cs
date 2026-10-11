@@ -1,8 +1,12 @@
+using MassTransit;
 using System.Text;
 using Cortex.Mediator.Commands;
 using Cortex.Mediator.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -65,7 +69,41 @@ using RouteGuard.Platform.TripExecutionMonitoring.Domain.Repositories;
 using RouteGuard.Platform.TripExecutionMonitoring.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 using RouteGuard.Platform.TripExecutionMonitoring.Infrastructure.Repositories;
 
+// Keep DateTime values as 'timestamp without time zone' (as with MySQL) so a DateTime with an unspecified Kind
+// (e.g. one coming from a JSON request) is not rejected by Npgsql.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
+
+// ---------------------------------------------------------------------------
+// Firebase Admin SDK Initialization (Local file, Render secret, or Environment Variable)
+// ---------------------------------------------------------------------------
+var firebaseCredentialPath = "firebase-adminsdk.json";
+var renderSecretPath = "/etc/secrets/firebase-adminsdk.json";
+var firebaseSecretJson = Environment.GetEnvironmentVariable("FIREBASE_ADMINSDK_JSON");
+
+Google.Apis.Auth.OAuth2.GoogleCredential? googleCredential = null;
+
+if (File.Exists(firebaseCredentialPath))
+{
+    googleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(firebaseCredentialPath);
+}
+else if (File.Exists(renderSecretPath))
+{
+    googleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(renderSecretPath);
+}
+else if (!string.IsNullOrWhiteSpace(firebaseSecretJson))
+{
+    googleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(firebaseSecretJson);
+}
+
+if (googleCredential != null)
+{
+    FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions
+    {
+        Credential = googleCredential,
+    });
+}
 
 // ---------------------------------------------------------------------------
 // Routing & Controllers
@@ -79,14 +117,23 @@ builder.Services.AddProblemDetails();
 // ---------------------------------------------------------------------------
 // CORS
 // ---------------------------------------------------------------------------
+// Only the origins listed in Cors:AllowedOrigins may call the API from a browser. Development with no list
+// stays open for local tools; any other environment with no list allows no cross-origin access at all
+// (the mobile apps do not use CORS).
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllPolicy",
-        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    options.AddPolicy("DefaultCorsPolicy", policy =>
+    {
+        if (allowedOrigins.Length > 0)
+            policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader();
+        else if (builder.Environment.IsDevelopment())
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
 });
 
 // ---------------------------------------------------------------------------
-// Database (MySQL via EF Core)
+// Database (PostgreSQL via EF Core / Npgsql)
 // ---------------------------------------------------------------------------
 builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 {
@@ -96,7 +143,7 @@ builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
 
     var connectionString = Environment.ExpandEnvironmentVariables(connectionStringTemplate);
 
-    options.UseMySQL(connectionString)
+    options.UseNpgsql(connectionString)
         .UseLoggerFactory(serviceProvider.GetRequiredService<ILoggerFactory>())
         .EnableDetailedErrors();
 
@@ -113,6 +160,15 @@ var tokenSecret = builder.Configuration["TokenSettings:Secret"];
 if (string.IsNullOrWhiteSpace(tokenSecret))
     throw new InvalidOperationException("TokenSettings:Secret is not set in the configuration.");
 
+// The secret may be an environment placeholder (e.g. %JWT_SECRET%). It must resolve to a real value of at
+// least 32 characters; otherwise the API refuses to start instead of signing tokens with a weak key.
+tokenSecret = Environment.ExpandEnvironmentVariables(tokenSecret);
+if (tokenSecret.StartsWith('%') || tokenSecret.Length < 32)
+    throw new InvalidOperationException(
+        "TokenSettings:Secret must be at least 32 characters. Set it with an environment variable " +
+        "(JWT_SECRET) or user-secrets; it must not be committed to the repository.");
+builder.Services.PostConfigure<TokenSettings>(settings => settings.Secret = tokenSecret);
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -126,7 +182,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.Zero
         };
     });
-builder.Services.AddAuthorization();
+// Every endpoint requires an authenticated user unless it is marked [AllowAnonymous]; role rules are declared
+// per action with [Authorize(Roles = AppRoles.…)].
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+builder.Services.AddHttpContextAccessor();
+
+// Behind Azure App Service (or any reverse proxy) TLS ends at the proxy: trust X-Forwarded-For / -Proto so the
+// API sees the real client address and scheme.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// Liveness probe used by the hosting platform (Azure App Service health check).
+builder.Services.AddHealthChecks();
+builder.Services.AddScoped<CallerContext>();
 
 // ---------------------------------------------------------------------------
 // Localization
@@ -229,6 +302,38 @@ builder.Services.AddScoped<IIamContextFacade, IamContextFacade>();
 builder.Services.AddScoped(typeof(ICommandPipelineBehavior<>), typeof(LoggingCommandBehavior<>));
 builder.Services.AddCortexMediator([typeof(Program)]);
 
+// ---------------------------------------------------------------------------
+// MassTransit & RabbitMQ
+// ---------------------------------------------------------------------------
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<RouteGuard.Platform.NotificationsCommunication.Application.Internal.EventHandlers.OfflineSyncCompletedEventConsumer>();
+    
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var rmqUrl = builder.Configuration["RabbitMQ:Url"];
+        if (!string.IsNullOrEmpty(rmqUrl))
+        {
+            var uri = Environment.ExpandEnvironmentVariables(rmqUrl);
+            cfg.Host(new Uri(uri));
+        }
+        else
+        {
+            var host = builder.Configuration["RabbitMQ:Host"] ?? "localhost";
+            var username = builder.Configuration["RabbitMQ:Username"] ?? "guest";
+            var password = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+
+            cfg.Host(host, "/", h =>
+            {
+                h.Username(username);
+                h.Password(password);
+            });
+        }
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
+
 var app = builder.Build();
 
 // Apply pending migrations on startup (safe to call even when the schema is up to date).
@@ -248,14 +353,26 @@ using (var scope = app.Services.CreateScope())
         // Seed demo data on an empty database, in dependency order across bounded contexts:
         // identity/org first, then stakeholders, then plans/subscription, routes, trips and
         // finally notifications that reference the seeded parent and trip.
-        var hashingService = services.GetRequiredService<IHashingService>();
-        await IamSeeder.SeedAsync(context, hashingService);
-        await StakeholderSeeder.SeedAsync(context);
-        await SubscriptionSeeder.SeedAsync(context);
-        await FleetSeeder.SeedAsync(context);
-        await TripSeeder.SeedAsync(context);
-        await NotificationSeeder.SeedAsync(context);
-        startupLogger.LogInformation("Seed data ensured.");
+        // Demo data (users with well known passwords, demo routes and trips) is only created in Development, or
+        // when Seed:Enabled is true. Reference data (plan catalog, notification templates) is always ensured.
+        var seedDemoData = app.Configuration.GetValue<bool?>("Seed:Enabled") ?? app.Environment.IsDevelopment();
+        if (seedDemoData)
+        {
+            var hashingService = services.GetRequiredService<IHashingService>();
+            await IamSeeder.SeedAsync(context, hashingService);
+            await StakeholderSeeder.SeedAsync(context);
+            await SubscriptionSeeder.SeedAsync(context);
+            await FleetSeeder.SeedAsync(context);
+            await TripSeeder.SeedAsync(context);
+            await NotificationSeeder.SeedAsync(context);
+            startupLogger.LogInformation("Demo seed data ensured.");
+        }
+        else
+        {
+            await SubscriptionSeeder.SeedPlansAsync(context);
+            await NotificationSeeder.SeedTemplatesAsync(context);
+            startupLogger.LogInformation("Demo seed data skipped (reference data ensured).");
+        }
     }
     catch (Exception ex)
     {
@@ -268,6 +385,7 @@ using (var scope = app.Services.CreateScope())
 // ---------------------------------------------------------------------------
 // HTTP request pipeline
 // ---------------------------------------------------------------------------
+app.UseForwardedHeaders();
 app.UseGlobalExceptionHandler();
 
 var supportedCultures = new[] { "en", "es" };
@@ -277,13 +395,13 @@ var localizationOptions = new RequestLocalizationOptions()
     .AddSupportedUICultures(supportedCultures);
 app.UseRequestLocalization(localizationOptions);
 
-if (app.Environment.IsDevelopment())
-{
+// if (app.Environment.IsDevelopment())
+// {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+// }
 
-app.UseCors("AllowAllPolicy");
+app.UseCors("DefaultCorsPolicy");
 // HTTPS redirection only outside Development so local http://localhost:8080 calls
 // (Swagger and the Vue frontend) are not redirected to the self-signed https port.
 if (!app.Environment.IsDevelopment())
@@ -291,5 +409,6 @@ if (!app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

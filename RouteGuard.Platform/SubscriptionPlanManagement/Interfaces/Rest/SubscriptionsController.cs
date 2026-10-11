@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
@@ -21,6 +23,7 @@ public class SubscriptionsController(
     ISubscriptionQueryService queryService,
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> CreateSubscription(CreateSubscriptionResource resource,
         CancellationToken cancellationToken)
@@ -33,6 +36,7 @@ public class SubscriptionsController(
                 SubscriptionResourceFromEntityAssembler.ToResourceFromEntity(subscription)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet("{subscriptionId:guid}")]
     public async Task<IActionResult> GetSubscriptionById(Guid subscriptionId, CancellationToken cancellationToken)
     {
@@ -43,6 +47,7 @@ public class SubscriptionsController(
         return Ok(SubscriptionResourceFromEntityAssembler.ToResourceFromEntity(subscription));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpGet]
     public async Task<IActionResult> GetSubscriptions([FromQuery] Guid? organizationId,
         CancellationToken cancellationToken)
@@ -54,6 +59,7 @@ public class SubscriptionsController(
         return Ok(subscriptions.Select(SubscriptionResourceFromEntityAssembler.ToResourceFromEntity));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{subscriptionId:guid}/activate")]
     public async Task<IActionResult> ActivateSubscription(Guid subscriptionId, CancellationToken cancellationToken)
     {
@@ -62,6 +68,7 @@ public class SubscriptionsController(
             subscription => Ok(SubscriptionResourceFromEntityAssembler.ToResourceFromEntity(subscription)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{subscriptionId:guid}/plan")]
     public async Task<IActionResult> UpgradeSubscription(Guid subscriptionId, UpgradeSubscriptionResource resource,
         CancellationToken cancellationToken)
@@ -72,6 +79,7 @@ public class SubscriptionsController(
             subscription => Ok(SubscriptionResourceFromEntityAssembler.ToResourceFromEntity(subscription)));
     }
 
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{subscriptionId:guid}/cancel")]
     public async Task<IActionResult> CancelSubscription(Guid subscriptionId, CancellationToken cancellationToken)
     {

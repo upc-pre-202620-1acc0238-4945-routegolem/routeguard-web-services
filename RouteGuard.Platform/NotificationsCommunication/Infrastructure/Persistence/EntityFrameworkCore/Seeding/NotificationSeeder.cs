@@ -45,7 +45,7 @@ public static class NotificationSeeder
 
         var announcement = notifications.FirstOrDefault(notification =>
             notification.Category.Value == "ANNOUNCEMENT" &&
-            notification.TripId.Identifier == trip.Id.Identifier);
+            notification.TripId == new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.TripId(trip.Id.Identifier));
 
         if (announcement is null)
         {
@@ -55,14 +55,14 @@ public static class NotificationSeeder
             context.Add(announcement);
         }
 
-        if (announcement.Announcements.All(current => current.RouteId.Identifier != trip.RouteId.Identifier))
+        if (announcement.Announcements.All(current => current.RouteId != new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.NotificationId(trip.RouteId.Identifier)))
             announcement.AddAnnouncement(trip.RouteId.Identifier, WelcomeAnnouncement);
 
         await context.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>Notification templates (es-PE) with {placeholders}; seeded once, editable in the database.</summary>
-    private static async Task SeedTemplatesAsync(AppDbContext context, CancellationToken cancellationToken)
+    public static async Task SeedTemplatesAsync(AppDbContext context, CancellationToken cancellationToken = default)
     {
         if (await context.Set<NotificationTemplate>().AnyAsync(cancellationToken)) return;
 

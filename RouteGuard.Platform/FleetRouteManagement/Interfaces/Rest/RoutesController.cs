@@ -1,4 +1,6 @@
 ﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using RouteGuard.Platform.FleetRouteManagement.Application.CommandServices;
@@ -37,6 +39,7 @@ public class RoutesController(
     : ControllerBase
 {
     /// <summary>Defines (creates) a new route in the draft state.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     [SwaggerOperation("Create Route", "Defines a new route in the draft state.", OperationId = "CreateRoute")]
     [SwaggerResponse(201, "The route was created.", typeof(RouteResource))]
@@ -52,6 +55,7 @@ public class RoutesController(
     }
 
     /// <summary>Gets a route by its unique identifier.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpGet("{routeId:guid}")]
     [SwaggerOperation("Get Route by Id", "Gets a route by its unique identifier.", OperationId = "GetRouteById")]
     [SwaggerResponse(200, "The route was found.", typeof(RouteResource))]
@@ -64,6 +68,7 @@ public class RoutesController(
     }
 
     /// <summary>Gets all routes, optionally filtered by organization.</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
     [HttpGet]
     [SwaggerOperation("Get Routes", "Gets all routes, optionally filtered by organization id.",
         OperationId = "GetRoutes")]
@@ -79,6 +84,7 @@ public class RoutesController(
     }
 
     /// <summary>Appends a stop to a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{routeId:guid}/stops")]
     [SwaggerOperation("Add Stop", "Appends a stop to a route.", OperationId = "AddStop")]
     [SwaggerResponse(200, "The stop was added.", typeof(RouteResource))]
@@ -94,6 +100,7 @@ public class RoutesController(
     }
 
     /// <summary>Removes a stop from a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{routeId:guid}/stops/{stopId:guid}")]
     [SwaggerOperation("Remove Stop", "Removes a stop from a route.", OperationId = "RemoveStop")]
     [SwaggerResponse(200, "The stop was removed.", typeof(RouteResource))]
@@ -107,6 +114,7 @@ public class RoutesController(
     }
 
     /// <summary>Assigns a vehicle to a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{routeId:guid}/vehicle")]
     [SwaggerOperation("Assign Vehicle", "Assigns a vehicle to a route.", OperationId = "AssignVehicle")]
     [SwaggerResponse(200, "The vehicle was assigned.", typeof(RouteResource))]
@@ -123,6 +131,7 @@ public class RoutesController(
     }
 
     /// <summary>Assigns the operating driver to a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{routeId:guid}/driver")]
     [SwaggerOperation("Assign Driver", "Assigns the operating driver to a route.", OperationId = "AssignDriver")]
     [SwaggerResponse(200, "The driver was assigned.", typeof(RouteResource))]
@@ -138,6 +147,7 @@ public class RoutesController(
     }
 
     /// <summary>Assigns a child (student) to a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{routeId:guid}/children")]
     [SwaggerOperation("Assign Child", "Assigns a child to a route.", OperationId = "AssignChild")]
     [SwaggerResponse(200, "The child was assigned.", typeof(RouteResource))]
@@ -153,6 +163,7 @@ public class RoutesController(
     }
 
     /// <summary>Removes a child (student) from a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpDelete("{routeId:guid}/children/{childId:guid}")]
     [SwaggerOperation("Remove Child", "Removes a child from a route.", OperationId = "RemoveChild")]
     [SwaggerResponse(200, "The child was removed.", typeof(RouteResource))]
@@ -167,6 +178,7 @@ public class RoutesController(
     }
 
     /// <summary>Defines the service days of a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{routeId:guid}/service-days")]
     [SwaggerOperation("Define Service Days", "Defines the weekdays on which a route operates.",
         OperationId = "DefineServiceDays")]
@@ -183,6 +195,7 @@ public class RoutesController(
     }
 
     /// <summary>Sets the departure time of a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPut("{routeId:guid}/departure-time")]
     [SwaggerOperation("Set Departure Time", "Sets the departure time of a route.",
         OperationId = "SetDepartureTime")]
@@ -199,6 +212,7 @@ public class RoutesController(
     }
 
     /// <summary>Finalizes the setup and activates a route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{routeId:guid}/activate")]
     [SwaggerOperation("Activate Route", "Finalizes the setup and activates a route.", OperationId = "ActivateRoute")]
     [SwaggerResponse(200, "The route was activated.", typeof(RouteResource))]
@@ -212,6 +226,7 @@ public class RoutesController(
     }
 
     /// <summary>Deactivates an active route.</summary>
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost("{routeId:guid}/deactivate")]
     [SwaggerOperation("Deactivate Route", "Deactivates an active route.", OperationId = "DeactivateRoute")]
     [SwaggerResponse(200, "The route was deactivated.", typeof(RouteResource))]

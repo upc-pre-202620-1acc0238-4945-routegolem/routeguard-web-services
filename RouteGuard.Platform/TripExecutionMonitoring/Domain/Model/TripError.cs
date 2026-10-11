@@ -28,5 +28,8 @@ public enum TripError
     DatabaseError,
 
     /// <summary>An unexpected internal error occurred.</summary>
-    InternalServerError
+    InternalServerError,
+    
+    /// <summary>The offline sync payload could not be processed.</summary>
+    SyncOfflineFailed
 }
