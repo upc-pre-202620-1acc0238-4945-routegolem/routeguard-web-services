@@ -61,18 +61,21 @@ public class NotificationCommandService(
                     }
                 }
 
-                try
+                if (FirebaseAdmin.FirebaseApp.DefaultInstance != null)
                 {
-                    await FirebaseAdmin.Messaging.FirebaseMessaging.DefaultInstance.SendAsync(message, cancellationToken);
-                }
-                catch (FirebaseAdmin.Messaging.FirebaseMessagingException ex) when (ex.MessagingErrorCode == FirebaseAdmin.Messaging.MessagingErrorCode.Unregistered || ex.MessagingErrorCode == FirebaseAdmin.Messaging.MessagingErrorCode.InvalidArgument)
-                {
-                    deviceToken.Deactivate();
-                    notification.Fail(ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    notification.Fail(ex.Message);
+                    try
+                    {
+                        await FirebaseAdmin.Messaging.FirebaseMessaging.DefaultInstance.SendAsync(message, cancellationToken);
+                    }
+                    catch (FirebaseAdmin.Messaging.FirebaseMessagingException ex) when (ex.MessagingErrorCode == FirebaseAdmin.Messaging.MessagingErrorCode.Unregistered || ex.MessagingErrorCode == FirebaseAdmin.Messaging.MessagingErrorCode.InvalidArgument)
+                    {
+                        deviceToken.Deactivate();
+                        notification.Fail(ex.Message);
+                    }
+                    catch (Exception ex)
+                    {
+                        notification.Fail(ex.Message);
+                    }
                 }
             }
         }

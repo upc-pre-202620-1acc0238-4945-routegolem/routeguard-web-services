@@ -75,10 +75,35 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
+// ---------------------------------------------------------------------------
+// Firebase Admin SDK Initialization (Local file, Render secret, or Environment Variable)
+// ---------------------------------------------------------------------------
+var firebaseCredentialPath = "firebase-adminsdk.json";
+var renderSecretPath = "/etc/secrets/firebase-adminsdk.json";
+var firebaseSecretJson = Environment.GetEnvironmentVariable("FIREBASE_ADMINSDK_JSON");
+
+Google.Apis.Auth.OAuth2.GoogleCredential? googleCredential = null;
+
+if (File.Exists(firebaseCredentialPath))
 {
-    Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile("firebase-adminsdk.json"),
-});
+    googleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(firebaseCredentialPath);
+}
+else if (File.Exists(renderSecretPath))
+{
+    googleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromFile(renderSecretPath);
+}
+else if (!string.IsNullOrWhiteSpace(firebaseSecretJson))
+{
+    googleCredential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(firebaseSecretJson);
+}
+
+if (googleCredential != null)
+{
+    FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions
+    {
+        Credential = googleCredential,
+    });
+}
 
 // ---------------------------------------------------------------------------
 // Routing & Controllers
