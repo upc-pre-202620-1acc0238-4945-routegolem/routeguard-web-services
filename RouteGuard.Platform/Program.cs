@@ -106,6 +106,20 @@ if (googleCredential != null)
 }
 
 // ---------------------------------------------------------------------------
+// Stripe SDK Initialization
+// ---------------------------------------------------------------------------
+var stripeSecretKey = builder.Configuration["Stripe:SecretKey"]
+    ?? Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+if (!string.IsNullOrWhiteSpace(stripeSecretKey))
+{
+    stripeSecretKey = Environment.ExpandEnvironmentVariables(stripeSecretKey);
+    if (!stripeSecretKey.StartsWith('%'))
+    {
+        Stripe.StripeConfiguration.ApiKey = stripeSecretKey;
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Routing & Controllers
 // ---------------------------------------------------------------------------
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
