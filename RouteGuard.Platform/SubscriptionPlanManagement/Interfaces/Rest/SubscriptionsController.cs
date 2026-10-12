@@ -24,6 +24,17 @@ public class SubscriptionsController(
     ProblemDetailsFactory problemDetailsFactory) : ControllerBase
 {
     [Authorize(Roles = AppRoles.Admin)]
+    [HttpPost("payment-intent")]
+    public async Task<IActionResult> CreatePaymentIntent(CreatePaymentIntentResource resource,
+        CancellationToken cancellationToken)
+    {
+        var result = await commandService.Handle(new CreatePaymentIntentCommand(resource.OrganizationId,
+            resource.PlanId), cancellationToken);
+        return SubscriptionActionResultAssembler.ToActionResult(this, result, problemDetailsFactory,
+            Ok);
+    }
+
+    [Authorize(Roles = AppRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> CreateSubscription(CreateSubscriptionResource resource,
         CancellationToken cancellationToken)
