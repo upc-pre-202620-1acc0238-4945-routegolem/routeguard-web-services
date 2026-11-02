@@ -400,14 +400,14 @@ using (var scope = app.Services.CreateScope())
 // HTTP request pipeline
 // ---------------------------------------------------------------------------
 app.UseForwardedHeaders();
-app.UseGlobalExceptionHandler();
 
-var supportedCultures = new[] { "en", "es" };
+var supportedCultures = new[] { "es", "es-PE", "en", "en-US" };
 var localizationOptions = new RequestLocalizationOptions()
-    .SetDefaultCulture(supportedCultures[0])
+    .SetDefaultCulture("es")
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
 app.UseRequestLocalization(localizationOptions);
+app.UseGlobalExceptionHandler();
 
 // if (app.Environment.IsDevelopment())
 // {
