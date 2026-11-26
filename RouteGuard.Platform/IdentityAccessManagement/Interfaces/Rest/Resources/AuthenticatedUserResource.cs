@@ -7,4 +7,6 @@ public record AuthenticatedUserResource(
     string Email,
     string RoleTier,
     Guid? OrganizationId,
-    string Token);
+    string Token,
+    string? PhotoData = null,
+    string PreferredLanguage = "es");

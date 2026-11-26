@@ -7,11 +7,11 @@ public static class IamResourceFromEntityAssembler
 {
     public static UserResource ToResourceFromEntity(User user) =>
         new(user.Id.Identifier, user.FullName.FirstName, user.FullName.LastName, user.Email.Value, user.Role.Value,
-            user.OrganizationId?.Identifier);
+            user.OrganizationId?.Identifier, user.PhotoData, user.PreferredLanguage);
 
     public static AuthenticatedUserResource ToAuthenticatedResourceFromEntity(User user, string token) =>
         new(user.Id.Identifier, user.FullName.FirstName, user.FullName.LastName, user.Email.Value, user.Role.Value,
-            user.OrganizationId?.Identifier, token);
+            user.OrganizationId?.Identifier, token, user.PhotoData, user.PreferredLanguage);
 
     public static OrganizationResource ToResourceFromEntity(Organization organization) =>
         new(organization.Id.Identifier, organization.Name.Value, organization.Status.Value, organization.CreatedAt);

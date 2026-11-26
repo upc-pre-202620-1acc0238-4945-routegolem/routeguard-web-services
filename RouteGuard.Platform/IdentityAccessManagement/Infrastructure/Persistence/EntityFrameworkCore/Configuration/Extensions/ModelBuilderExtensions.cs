@@ -46,6 +46,8 @@ public static class ModelBuilderExtensions
                 .HasMaxLength(255).IsRequired();
             user.Property(u => u.Role).HasConversion(role => role.Value, value => new RoleTier(value))
                 .HasMaxLength(20).IsRequired();
+            user.Property(u => u.PhotoData).HasColumnType("text");
+            user.Property(u => u.PreferredLanguage).HasMaxLength(10).HasDefaultValue("es").IsRequired();
         });
     }
 }

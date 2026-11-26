@@ -13,5 +13,9 @@ public record VehicleResource(
     string Brand,
     string Model,
     int Capacity,
-    string Status
+    string Status,
+    string SoatPolicy = "SOAT-2026-88412",
+    string SoatInsurer = "Rímac Seguros",
+    string SoatExpiresAt = "2026-12-15",
+    bool SoatValid = true
 );

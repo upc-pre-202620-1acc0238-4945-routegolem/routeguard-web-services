@@ -46,7 +46,7 @@ public class VehiclesController(
         return CreatedAtAction(nameof(GetVehicleById), new { vehicleId = vehicle.Id }, ToResource(vehicle));
     }
 
-    [Authorize(Roles = AppRoles.Admin)]
+    [Authorize(Roles = AppRoles.Any)]
     [HttpGet("{vehicleId:guid}")]
     [SwaggerOperation("Get Vehicle by Id", "Gets a vehicle record by id.", OperationId = "GetVehicleById")]
     [SwaggerResponse(200, "The vehicle was found.", typeof(VehicleResource))]
@@ -59,7 +59,7 @@ public class VehiclesController(
             : Ok(ToResource(vehicle));
     }
 
-    [Authorize(Roles = AppRoles.Admin)]
+    [Authorize(Roles = AppRoles.Any)]
     [HttpGet]
     [SwaggerOperation("Get Vehicles", "Gets all vehicle records.", OperationId = "GetVehicles")]
     [SwaggerResponse(200, "The vehicles were found.", typeof(IEnumerable<VehicleResource>))]
@@ -119,7 +119,8 @@ public class VehiclesController(
         problemDetailsFactory.CreateProblemDetails(this, statusCode, error, error.ToString());
 
     private static VehicleResource ToResource(VehicleCatalogItem vehicle) =>
-        new(vehicle.Id, vehicle.OrganizationId, vehicle.Plate, string.Empty, vehicle.Model, vehicle.Capacity, vehicle.Status);
+        new(vehicle.Id, vehicle.OrganizationId, vehicle.Plate, vehicle.Brand, vehicle.Model, vehicle.Capacity,
+            vehicle.Status, vehicle.SoatPolicy, vehicle.SoatInsurer, vehicle.SoatExpiresAt, vehicle.SoatValid);
 
     private static bool IsValid(Guid organizationId, string? plate, string? model, int capacity) =>
         organizationId != Guid.Empty &&

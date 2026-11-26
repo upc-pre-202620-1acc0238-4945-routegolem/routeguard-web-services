@@ -375,10 +375,12 @@ using (var scope = app.Services.CreateScope())
             var hashingService = services.GetRequiredService<IHashingService>();
             await IamSeeder.SeedAsync(context, hashingService);
             await StakeholderSeeder.SeedAsync(context);
+            await StakeholderSeeder.EnsureCaregiversSeededAsync(context);
             await SubscriptionSeeder.SeedAsync(context);
             await FleetSeeder.SeedAsync(context);
             await TripSeeder.SeedAsync(context);
             await NotificationSeeder.SeedAsync(context);
+            await NotificationSeeder.EnsureCommunicationSeededAsync(context);
             startupLogger.LogInformation("Demo seed data ensured.");
         }
         else
