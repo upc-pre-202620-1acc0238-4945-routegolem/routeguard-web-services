@@ -36,13 +36,15 @@ public class LiveTrackingController(AppDbContext context, CallerContext caller) 
 
         var routes = await context.Set<RouteAggregate>().ToListAsync(cancellationToken);
         var drivers = await context.Set<Driver>().ToListAsync(cancellationToken);
+        var catalogVehicles = await context.Set<RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.VehicleCatalogItem>()
+            .AsNoTracking().ToListAsync(cancellationToken);
         var live = await LoadLiveDataAsync(trips.Select(t => t.Id), cancellationToken);
 
         var result = trips
             .Select(trip =>
             {
                 var route = routes.FirstOrDefault(r => r.Id == new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.RouteId(trip.RouteId.Identifier));
-                return route is null ? null : Build(trip, route, drivers, children: [], live);
+                return route is null ? null : Build(trip, route, drivers, catalogVehicles, children: [], live);
             })
             .Where(live => live is not null)
             .ToList();
@@ -77,13 +79,15 @@ public class LiveTrackingController(AppDbContext context, CallerContext caller) 
 
         var route = routes.First(r => r.Id == new RouteGuard.Platform.FleetRouteManagement.Domain.Model.ValueObjects.RouteId(trip.RouteId.Identifier));
         var drivers = await context.Set<Driver>().ToListAsync(cancellationToken);
+        var catalogVehicles = await context.Set<RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.VehicleCatalogItem>()
+            .AsNoTracking().ToListAsync(cancellationToken);
 
         // Only the children of this parent that ride in this route.
         var assigned = (route.Assignment?.Children.Select(c => new RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.ValueObjects.ChildId(c.Identifier)) ?? []).ToHashSet();
         var ownChildren = parent.Children.Where(c => assigned.Contains(c.Id)).ToList();
 
         var live = await LoadLiveDataAsync([trip.Id], cancellationToken);
-        return Ok(Build(trip, route, drivers, ownChildren, live));
+        return Ok(Build(trip, route, drivers, catalogVehicles, ownChildren, live));
     }
 
     /// <summary>Last GPS point (<c>location_records</c>) and visited stops (<c>waypoints</c>) of each trip.</summary>
@@ -116,6 +120,7 @@ public class LiveTrackingController(AppDbContext context, CallerContext caller) 
     private sealed record LiveData(Dictionary<Guid, LocationRecord> Latest, Dictionary<Guid, HashSet<int>> Visited);
 
     private static LiveTripResource Build(TripAggregate trip, RouteAggregate route, List<Driver> drivers,
+        List<RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.VehicleCatalogItem> catalogVehicles,
         IReadOnlyCollection<Child> children, LiveData live)
     {
         var tripId = trip.Id.Identifier;
@@ -136,6 +141,13 @@ public class LiveTrackingController(AppDbContext context, CallerContext caller) 
             .ToList();
 
         var driver = drivers.FirstOrDefault(d => d.Id == new RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.ValueObjects.DriverId(trip.DriverId.Identifier));
+        var plate = route.Vehicle?.Plate;
+        var catalogVehicle = plate is null
+            ? null
+            : catalogVehicles.FirstOrDefault(v => string.Equals(v.Plate, plate, StringComparison.OrdinalIgnoreCase));
+        var model = catalogVehicle != null
+            ? catalogVehicle.Model
+            : (route.Vehicle != null ? $"{route.Vehicle.Brand} {route.Vehicle.Model}".Trim() : null);
 
         return new LiveTripResource(
             tripId,
@@ -148,6 +160,15 @@ public class LiveTrackingController(AppDbContext context, CallerContext caller) 
             latest is null ? null : new LiveLocationResource(latest.Latitude, latest.Longitude, latest.SpeedKmh,
                 latest.RecordedAt.ToUnixTimeMilliseconds()),
             stops,
-            liveChildren);
+            liveChildren,
+            VehiclePlate: plate ?? catalogVehicle?.Plate,
+            VehicleModel: model,
+            DriverPhone: driver?.PhoneNumber.Value,
+            DriverLicense: driver?.LicenseNumber.Value,
+            DriverLicenseCategory: driver?.LicenseCategory,
+            SoatPolicy: catalogVehicle?.SoatPolicy,
+            SoatInsurer: catalogVehicle?.SoatInsurer,
+            SoatExpiresAt: catalogVehicle?.SoatExpiresAt,
+            SoatValid: catalogVehicle?.SoatValid ?? true);
     }
 }

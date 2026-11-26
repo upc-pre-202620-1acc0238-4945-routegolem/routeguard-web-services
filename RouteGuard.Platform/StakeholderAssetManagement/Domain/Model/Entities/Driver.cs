@@ -47,6 +47,10 @@ public class Driver
 
     public LicenseNumber LicenseNumber { get; private set; }
 
+    public string LicenseCategory { get; private set; } = "A-IIIa";
+
+    public string LicenseExpiresAt { get; private set; } = "2027-08-30";
+
     public bool Available { get; private set; }
 
     public bool IsAvailable() => Available;
@@ -56,6 +60,12 @@ public class Driver
     public string GetLicenseNumber() => LicenseNumber.ToString();
 
     public void UpdatePhoneNumber(PhoneNumber phone) => PhoneNumber = phone;
+
+    public void UpdateLicenseDetails(string category, string expiresAt)
+    {
+        if (!string.IsNullOrWhiteSpace(category)) LicenseCategory = category.Trim();
+        if (!string.IsNullOrWhiteSpace(expiresAt)) LicenseExpiresAt = expiresAt.Trim();
+    }
 
     public void Update(FullName fullName, Email email, PhoneNumber phoneNumber, LicenseNumber licenseNumber,
         bool available)

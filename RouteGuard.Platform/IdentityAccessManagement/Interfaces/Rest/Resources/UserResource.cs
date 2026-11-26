@@ -6,4 +6,6 @@ public record UserResource(
     string LastName,
     string Email,
     string RoleTier,
-    Guid? OrganizationId);
+    Guid? OrganizationId,
+    string? PhotoData = null,
+    string PreferredLanguage = "es");

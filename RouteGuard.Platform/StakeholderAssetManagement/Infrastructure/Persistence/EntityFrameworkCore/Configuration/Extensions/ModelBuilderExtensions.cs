@@ -83,6 +83,8 @@ public static class ModelBuilderExtensions
             driver.Property(d => d.LicenseNumber)
                 .HasConversion(license => license.Value, value => new LicenseNumber(value))
                 .HasMaxLength(LicenseNumber.MaxLength);
+            driver.Property(d => d.LicenseCategory).HasMaxLength(20).HasDefaultValue("A-IIIa").IsRequired();
+            driver.Property(d => d.LicenseExpiresAt).HasMaxLength(20).HasDefaultValue("2027-08-30").IsRequired();
             driver.Property(d => d.Available).IsRequired();
         });
 

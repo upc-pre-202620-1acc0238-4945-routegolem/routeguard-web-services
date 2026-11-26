@@ -51,4 +51,12 @@ public class Plan
     public bool IsWithinRouteQuota(int current) => RouteQuota.IsWithinLimit(current);
 
     public bool IsWithinDriverQuota(int current) => DriverQuota.IsWithinLimit(current);
+
+    public void UpdateCatalog(int maxRoutes, int maxDrivers, decimal price)
+    {
+        if (price < 0) throw new ArgumentException("Plan price cannot be negative.", nameof(price));
+        RouteQuota = new RouteQuota(maxRoutes);
+        DriverQuota = new DriverQuota(maxDrivers);
+        Price = price;
+    }
 }

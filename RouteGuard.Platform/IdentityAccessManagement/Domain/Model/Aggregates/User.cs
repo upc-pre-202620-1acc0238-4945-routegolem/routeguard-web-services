@@ -35,6 +35,7 @@ public partial class User
         Email = email;
         PasswordHash = passwordHash;
         Role = role;
+        PreferredLanguage = "es";
     }
 
     public UserId Id { get; private set; }
@@ -49,9 +50,21 @@ public partial class User
 
     public RoleTier Role { get; private set; }
 
+    public string? PhotoData { get; private set; }
+
+    public string PreferredLanguage { get; private set; } = "es";
+
     public bool IsAdmin() => Role.IsAdmin();
 
     public string GetFullName() => FullName.ToString();
 
     public string GetEmail() => Email.ToString();
+
+    public void UpdatePhoto(string? photoData) =>
+        PhotoData = string.IsNullOrWhiteSpace(photoData) ? null : photoData.Trim();
+
+    public void SetPreferredLanguage(string language) =>
+        PreferredLanguage = string.Equals(language?.Trim(), "en", StringComparison.OrdinalIgnoreCase) ? "en" : "es";
+
+    public void UpdatePasswordHash(PasswordHash passwordHash) => PasswordHash = passwordHash;
 }

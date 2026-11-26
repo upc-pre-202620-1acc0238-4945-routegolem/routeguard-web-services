@@ -44,5 +44,21 @@ public static class TripSeeder
         context.Add(pending);
 
         await context.SaveChangesAsync(cancellationToken);
+
+        if (!await context.Set<RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.TripRating>().AnyAsync(cancellationToken))
+        {
+            context.Add(new RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.TripRating
+            {
+                Id = Guid.Parse("77000000-0000-0000-0000-000000000001"),
+                OrganizationId = route.OrganizationId.Identifier,
+                TripId = completed.Id.Identifier,
+                ParentId = Guid.Parse("e0000000-0000-0000-0000-000000000001"),
+                UserId = Guid.Parse("b0000000-0000-0000-0000-000000000003"),
+                Stars = 5,
+                Comment = "Excelente puntualidad y trato amable con los niños.",
+                CreatedAt = DateTimeOffset.UtcNow.AddDays(-1)
+            });
+            await context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

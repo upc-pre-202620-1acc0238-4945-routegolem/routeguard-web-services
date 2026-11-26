@@ -1,10 +1,15 @@
 ﻿using System.Net.Mime;
 using Microsoft.AspNetCore.Authorization;
-using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
+using RouteGuard.Platform.IdentityAccessManagement.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
+using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities;
 using RouteGuard.Platform.Shared.Interfaces.Rest.ProblemDetails;
+using RouteGuard.Platform.Shared.Interfaces.Rest.Security;
 using RouteGuard.Platform.Shared.Resources.Errors;
+using RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Entities;
 using RouteGuard.Platform.TripExecutionMonitoring.Application.CommandServices;
 using RouteGuard.Platform.TripExecutionMonitoring.Application.QueryServices;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Commands;
@@ -12,8 +17,13 @@ using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Queries;
 using RouteGuard.Platform.TripExecutionMonitoring.Interfaces.Rest.Resources;
 using RouteGuard.Platform.TripExecutionMonitoring.Interfaces.Rest.Transform;
 using Swashbuckle.AspNetCore.Annotations;
+using RouteAggregate = RouteGuard.Platform.FleetRouteManagement.Domain.Model.Aggregates.Route;
+using TripAggregate = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip;
 
 namespace RouteGuard.Platform.TripExecutionMonitoring.Interfaces.Rest;
+
+public record RateTripResource(int Stars, string? Comment);
+public record CancelTripResource(string? Reason);
 
 /// <summary>
 ///     REST endpoints for the Trip Execution &amp; Monitoring bounded context.
@@ -36,7 +46,8 @@ public class TripsController(
     ITripQueryService tripQueryService,
     IStringLocalizer<ErrorMessages> errorLocalizer,
     ProblemDetailsFactory problemDetailsFactory,
-    CallerContext caller)
+    CallerContext caller,
+    AppDbContext dbContext)
     : ControllerBase
 {
     /// <summary>403 when a driver tries to operate a trip that belongs to another driver (admins are not limited).</summary>
@@ -175,5 +186,143 @@ public class TripsController(
         var result = await tripCommandService.Handle(new CompleteTripCommand(tripId), cancellationToken);
         return TripActionResultAssembler.ToActionResult(this, result, problemDetailsFactory,
             trip => Ok(TripResourceFromEntityAssembler.ToResourceFromEntity(trip)));
+    }
+
+    /// <summary>Cancels a trip for force majeure (US-21).</summary>
+    [Authorize(Roles = AppRoles.AdminOrDriver)]
+    [HttpPost("{tripId:guid}/cancel")]
+    [SwaggerOperation("Cancel Trip (US-21)", "Cancels a pending or in-progress trip due to force majeure.", OperationId = "CancelTrip")]
+    public async Task<IActionResult> CancelTrip(Guid tripId, [FromBody] CancelTripResource? resource, CancellationToken cancellationToken)
+    {
+        var denied = await DriverOwnsTripAsync(tripId, cancellationToken);
+        if (denied is not null) return denied;
+
+        var trip = await dbContext.Set<TripAggregate>()
+            .FirstOrDefaultAsync(t => t.Id == new Domain.Model.ValueObjects.TripId(tripId), cancellationToken);
+        if (trip is null)
+            return NotFound();
+
+        if (!trip.State.IsCompleted() && !trip.State.IsCancelled())
+        {
+            if (trip.State.IsInProgress() && !string.IsNullOrWhiteSpace(resource?.Reason))
+            {
+                trip.ReportIncident(new Domain.Model.ValueObjects.IncidentDescription($"Cancelación: {resource.Reason.Trim()}"));
+            }
+            trip.Cancel();
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        return Ok(TripResourceFromEntityAssembler.ToResourceFromEntity(trip));
+    }
+
+    /// <summary>Gets enriched trip history for Parent, Driver or Admin (US-15).</summary>
+    [Authorize(Roles = AppRoles.Any)]
+    [HttpGet("history")]
+    [SwaggerOperation("Get Trip History (US-15)", "Returns completed, cancelled and active trips enriched with driver, vehicle and rating details.")]
+    public async Task<IActionResult> GetTripHistory(CancellationToken cancellationToken)
+    {
+        var trips = (await dbContext.Set<TripAggregate>()
+                .Include(t => t.Attendances)
+                .Include(t => t.Incidents)
+                .ToListAsync(cancellationToken))
+            .OrderByDescending(t => t.EndTime ?? t.CancelledAt ?? t.StartTime ?? t.CreatedAt ?? DateTimeOffset.UtcNow)
+            .ToList();
+
+        if (caller.IsDriver)
+        {
+            var ownDriver = await caller.GetDriverIdAsync(cancellationToken);
+            trips = trips.Where(t => t.DriverId.Identifier == ownDriver).ToList();
+        }
+
+        var routes = await dbContext.Set<RouteAggregate>().AsNoTracking().ToListAsync(cancellationToken);
+        var drivers = await dbContext.Set<Driver>().AsNoTracking().ToListAsync(cancellationToken);
+        var ratings = await dbContext.Set<TripRating>().AsNoTracking().ToListAsync(cancellationToken);
+        var callerUserId = caller.UserId;
+
+        var result = trips.Select(t =>
+        {
+            var route = routes.FirstOrDefault(r => r.Id.Identifier == t.RouteId.Identifier);
+            var driver = drivers.FirstOrDefault(d => d.Id.Identifier == t.DriverId.Identifier);
+            var tripRatings = ratings.Where(r => r.TripId == t.Id.Identifier).ToList();
+            var myRating = callerUserId.HasValue
+                ? tripRatings.FirstOrDefault(r => r.UserId == callerUserId.Value)?.Stars
+                : null;
+            var avgRating = tripRatings.Count > 0 ? Math.Round(tripRatings.Average(r => r.Stars), 1) : (double?)null;
+
+            return new
+            {
+                tripId = t.Id.Identifier,
+                routeId = t.RouteId.Identifier,
+                routeName = route?.Name ?? "Ruta escolar",
+                driverName = driver?.FullName.ToString() ?? "Conductor",
+                vehiclePlate = route?.Vehicle?.Plate ?? "ABC-123",
+                status = t.State.Value,
+                boardedCount = t.Attendances.Count(a => a.BoardingState.IsBoarded()),
+                totalStudents = route?.Assignment?.ChildIds.Count ?? t.Attendances.Count,
+                startTime = t.StartTime,
+                endTime = t.EndTime ?? t.CancelledAt,
+                myRating = myRating,
+                averageRating = avgRating,
+                cancellationReason = t.State.IsCancelled()
+                    ? t.Incidents.LastOrDefault()?.Description.Value
+                    : null
+            };
+        });
+
+        return Ok(result);
+    }
+
+    /// <summary>Submits or updates a service rating for a trip (US-14).</summary>
+    [Authorize(Roles = AppRoles.Any)]
+    [HttpPost("{tripId:guid}/rating")]
+    [SwaggerOperation("Rate Trip (US-14)", "Stores or updates a 1-5 star service rating for a trip.")]
+    public async Task<IActionResult> RateTrip(Guid tripId, RateTripResource resource, CancellationToken cancellationToken)
+    {
+        if (resource.Stars < 1 || resource.Stars > 5)
+            return BadRequest(new { message = "Stars must be between 1 and 5." });
+
+        var userId = caller.UserId ?? Guid.Empty;
+        var parentId = caller.IsParent ? await caller.GetParentIdAsync(cancellationToken) : null;
+
+        var existing = await dbContext.Set<TripRating>()
+            .FirstOrDefaultAsync(r => r.TripId == tripId && r.UserId == userId, cancellationToken);
+
+        if (existing is null)
+        {
+            existing = new TripRating
+            {
+                Id = Guid.NewGuid(),
+                OrganizationId = caller.OrganizationId ?? IamSeeder.SeedOrganizationId,
+                TripId = tripId,
+                ParentId = parentId,
+                UserId = userId,
+                Stars = resource.Stars,
+                Comment = resource.Comment?.Trim(),
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+            await dbContext.Set<TripRating>().AddAsync(existing, cancellationToken);
+        }
+        else
+        {
+            existing.Stars = resource.Stars;
+            existing.Comment = resource.Comment?.Trim();
+            existing.CreatedAt = DateTimeOffset.UtcNow;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(existing);
+    }
+
+    [Authorize(Roles = AppRoles.Any)]
+    [HttpGet("{tripId:guid}/ratings")]
+    [SwaggerOperation("Get Trip Ratings (US-14)", "Gets all ratings for a trip.")]
+    public async Task<IActionResult> GetTripRatings(Guid tripId, CancellationToken cancellationToken)
+    {
+        var items = await dbContext.Set<TripRating>()
+            .AsNoTracking()
+            .Where(r => r.TripId == tripId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync(cancellationToken);
+        return Ok(items);
     }
 }

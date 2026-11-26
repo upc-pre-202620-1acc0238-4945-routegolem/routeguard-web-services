@@ -22,12 +22,27 @@ public static class SubscriptionSeeder
     /// <summary>Plan catalog (reference data): needed in every environment, including production.</summary>
     public static async Task SeedPlansAsync(AppDbContext context, CancellationToken cancellationToken = default)
     {
-        if (await context.Set<Plan>().AnyAsync(cancellationToken)) return;
+        var existing = await context.Set<Plan>().ToListAsync(cancellationToken);
 
-        AddPlan(context, "c0000000-0000-0000-0000-000000000001", PlanTier.Basic, 2, 2, 9.99m);
-        AddPlan(context, "c0000000-0000-0000-0000-000000000002", PlanTier.Intermediate, 6, 6, 24.99m);
-        AddPlan(context, CompletePlanId.ToString(), PlanTier.Complete, 20, 20, 49.99m);
+        EnsurePlan(context, existing, "c0000000-0000-0000-0000-000000000001", PlanTier.Basic, 2, 2, 49.99m);
+        EnsurePlan(context, existing, "c0000000-0000-0000-0000-000000000002", PlanTier.Intermediate, 6, 6, 99.99m);
+        EnsurePlan(context, existing, CompletePlanId.ToString(), PlanTier.Complete, 20, 20, 149.99m);
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void EnsurePlan(AppDbContext context, List<Plan> existing, string id, string tier, int maxRoutes,
+        int maxDrivers, decimal price)
+    {
+        var guid = Guid.Parse(id);
+        var current = existing.FirstOrDefault(p => p.Id.Identifier == guid || p.Tier.Value == tier);
+        if (current is null)
+        {
+            AddPlan(context, id, tier, maxRoutes, maxDrivers, price);
+        }
+        else if (current.Price != price || current.GetRouteLimit() != maxRoutes || current.GetDriverLimit() != maxDrivers)
+        {
+            current.UpdateCatalog(maxRoutes, maxDrivers, price);
+        }
     }
 
     /// <summary>Plan catalog plus the demo subscription of the demo organization (development only).</summary>

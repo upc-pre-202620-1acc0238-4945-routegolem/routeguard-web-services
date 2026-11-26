@@ -45,6 +45,40 @@ public static class StakeholderSeeder
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public static async Task EnsureCaregiversSeededAsync(AppDbContext context, CancellationToken cancellationToken = default)
+    {
+        if (await context.Set<RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.AuthorizedCaregiver>()
+            .AnyAsync(cancellationToken)) return;
+
+        var rositaParent = await context.Set<Parent>().OrderBy(p => p.Email).FirstOrDefaultAsync(cancellationToken);
+        if (rositaParent is null) return;
+
+        context.AddRange(
+            new RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.AuthorizedCaregiver
+            {
+                Id = Guid.Parse("71000000-0000-0000-0000-000000000001"),
+                OrganizationId = rositaParent.OrganizationId.Identifier,
+                ParentId = rositaParent.Id.Identifier,
+                FullName = "Carmen López de Aljovín",
+                Relationship = "Abuela / Cuidadora principal",
+                PhoneNumber = "987-123-456",
+                DocumentNumber = "08491230",
+                CreatedAt = DateTimeOffset.UtcNow
+            },
+            new RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.AuthorizedCaregiver
+            {
+                Id = Guid.Parse("71000000-0000-0000-0000-000000000002"),
+                OrganizationId = rositaParent.OrganizationId.Identifier,
+                ParentId = rositaParent.Id.Identifier,
+                FullName = "Laura Gómez",
+                Relationship = "Madre / Apoderada alterna",
+                PhoneNumber = "999-888-777",
+                DocumentNumber = "42105598",
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     private static void AddDriver(AppDbContext context, string id, Guid organizationId, string userId,
         string firstName, string lastName, string email, string phone, string license)
     {

@@ -41,6 +41,7 @@ public static class FleetSeeder
 
         await EnsureMorningRouteAsync(context, organizationId, driver, children, cancellationToken);
         await EnsureDraftRouteAsync(context, organizationId, cancellationToken);
+        await EnsureOperationsCatalogAsync(context, organizationId.Identifier, cancellationToken);
 
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -52,7 +53,7 @@ public static class FleetSeeder
         var route = await FindSeedRouteAsync(context, routeId, cancellationToken);
         if (route is null)
         {
-            route = new RouteAggregate(organizationId, "Ruta San Martin - Turno Manana");
+            route = new RouteAggregate(organizationId, "Ruta San Martín - Turno Mañana");
             context.Entry(route).Property(currentRoute => currentRoute.Id).CurrentValue = routeId;
             context.Add(route);
         }
@@ -72,7 +73,7 @@ public static class FleetSeeder
             : RouteState.CreateDraft();
 
         route.ReplaceConfiguration(
-            "Ruta San Martin - Turno Manana",
+            "Ruta San Martín - Turno Mañana",
             state,
             new DepartureTime("07:00"),
             new ServiceDays(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]),
@@ -133,28 +134,133 @@ public static class FleetSeeder
 
     private static async Task EnsureVehiclesCatalogAsync(AppDbContext context, CancellationToken cancellationToken)
     {
-        if (await context.Set<VehicleCatalogItem>().AnyAsync(cancellationToken)) return;
-
         var organizationId = IamSeeder.SeedOrganizationId;
-        await context.Set<VehicleCatalogItem>().AddRangeAsync([
-            new VehicleCatalogItem
+        var existing = await context.Set<VehicleCatalogItem>().ToListAsync(cancellationToken);
+
+        if (existing.Count == 0)
+        {
+            await context.Set<VehicleCatalogItem>().AddRangeAsync([
+                new VehicleCatalogItem
+                {
+                    Id = Guid.Parse("a1000000-0000-0000-0000-000000000001"),
+                    OrganizationId = organizationId,
+                    Plate = "ABC-123",
+                    Brand = "Mercedes-Benz",
+                    Model = "Mercedes-Benz Sprinter 416",
+                    Capacity = 20,
+                    Status = "ACTIVE",
+                    SoatPolicy = "SOAT-2026-88412",
+                    SoatInsurer = "Rímac Seguros",
+                    SoatExpiresAt = "2026-12-15",
+                    SoatValid = true
+                },
+                new VehicleCatalogItem
+                {
+                    Id = Guid.Parse("a1000000-0000-0000-0000-000000000002"),
+                    OrganizationId = organizationId,
+                    Plate = "DEF-456",
+                    Brand = "Toyota",
+                    Model = "Toyota Hiace",
+                    Capacity = 15,
+                    Status = "ACTIVE",
+                    SoatPolicy = "SOAT-2026-99104",
+                    SoatInsurer = "Pacífico Seguros",
+                    SoatExpiresAt = "2027-03-20",
+                    SoatValid = true
+                }
+            ], cancellationToken);
+            return;
+        }
+
+        foreach (var v in existing)
+        {
+            if (string.IsNullOrWhiteSpace(v.SoatPolicy))
             {
-                Id = Guid.Parse("a1000000-0000-0000-0000-000000000001"),
-                OrganizationId = organizationId,
-                Plate = "ABC-123",
-                Model = "Mercedes-Benz Sprinter 416",
-                Capacity = 20,
-                Status = "ACTIVE"
-            },
-            new VehicleCatalogItem
-            {
-                Id = Guid.Parse("a1000000-0000-0000-0000-000000000002"),
-                OrganizationId = organizationId,
-                Plate = "DEF-456",
-                Model = "Toyota Hiace",
-                Capacity = 15,
-                Status = "ACTIVE"
+                v.SoatPolicy = v.Plate == "DEF-456" ? "SOAT-2026-99104" : "SOAT-2026-88412";
+                v.SoatInsurer = v.Plate == "DEF-456" ? "Pacífico Seguros" : "Rímac Seguros";
+                v.SoatExpiresAt = v.Plate == "DEF-456" ? "2027-03-20" : "2026-12-15";
+                v.SoatValid = true;
             }
-        ], cancellationToken);
+            if (string.IsNullOrWhiteSpace(v.Brand))
+            {
+                v.Brand = v.Model.Contains("Toyota", StringComparison.OrdinalIgnoreCase) ? "Toyota" : "Mercedes-Benz";
+            }
+        }
+    }
+
+    private static async Task EnsureOperationsCatalogAsync(AppDbContext context, Guid organizationId,
+        CancellationToken cancellationToken)
+    {
+        if (!await context.Set<VehicleMaintenance>().AnyAsync(cancellationToken))
+        {
+            await context.Set<VehicleMaintenance>().AddRangeAsync([
+                new VehicleMaintenance
+                {
+                    Id = Guid.Parse("72000000-0000-0000-0000-000000000001"),
+                    OrganizationId = organizationId,
+                    VehicleId = Guid.Parse("a1000000-0000-0000-0000-000000000001"),
+                    VehiclePlate = "ABC-123",
+                    MaintenanceType = "Mantenimiento preventivo 10,000 km",
+                    Description = "Cambio de aceite sintético, filtros y revisión integral de frenos.",
+                    Workshop = "Divemotor San Luis",
+                    Cost = 480.00m,
+                    OdometerKm = 42500,
+                    PerformedAt = "2026-11-10",
+                    NextDueDate = "2027-02-10",
+                    Status = "COMPLETED",
+                    CreatedAt = DateTimeOffset.UtcNow
+                },
+                new VehicleMaintenance
+                {
+                    Id = Guid.Parse("72000000-0000-0000-0000-000000000002"),
+                    OrganizationId = organizationId,
+                    VehicleId = Guid.Parse("a1000000-0000-0000-0000-000000000002"),
+                    VehiclePlate = "DEF-456",
+                    MaintenanceType = "Alineamiento y balanceo",
+                    Description = "Calibración de suspensión delantera y rotación de neumáticos.",
+                    Workshop = "Autocentro Surquillo",
+                    Cost = 220.00m,
+                    OdometerKm = 31800,
+                    PerformedAt = "2026-11-18",
+                    NextDueDate = "2027-03-18",
+                    Status = "COMPLETED",
+                    CreatedAt = DateTimeOffset.UtcNow
+                }
+            ], cancellationToken);
+        }
+
+        if (!await context.Set<OperationalExpense>().AnyAsync(cancellationToken))
+        {
+            await context.Set<OperationalExpense>().AddRangeAsync([
+                new OperationalExpense
+                {
+                    Id = Guid.Parse("73000000-0000-0000-0000-000000000001"),
+                    OrganizationId = organizationId,
+                    VehicleId = Guid.Parse("a1000000-0000-0000-0000-000000000001"),
+                    VehiclePlate = "ABC-123",
+                    DriverId = Guid.Parse("d0000000-0000-0000-0000-000000000001"),
+                    DriverName = "Carlos Ramirez",
+                    Category = "FUEL",
+                    Description = "Abastecimiento Diésel DB5 S-50 (Estación Primax Javier Prado)",
+                    Amount = 165.50m,
+                    ExpenseDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd"),
+                    CreatedAt = DateTimeOffset.UtcNow
+                },
+                new OperationalExpense
+                {
+                    Id = Guid.Parse("73000000-0000-0000-0000-000000000002"),
+                    OrganizationId = organizationId,
+                    VehicleId = Guid.Parse("a1000000-0000-0000-0000-000000000001"),
+                    VehiclePlate = "ABC-123",
+                    DriverId = Guid.Parse("d0000000-0000-0000-0000-000000000001"),
+                    DriverName = "Carlos Ramirez",
+                    Category = "TOLL",
+                    Description = "Peaje Vía Expresa Línea Amarilla (ida y vuelta)",
+                    Amount = 13.20m,
+                    ExpenseDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd"),
+                    CreatedAt = DateTimeOffset.UtcNow
+                }
+            ], cancellationToken);
+        }
     }
 }

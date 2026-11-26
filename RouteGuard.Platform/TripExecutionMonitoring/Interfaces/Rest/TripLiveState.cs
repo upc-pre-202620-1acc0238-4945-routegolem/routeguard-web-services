@@ -33,7 +33,16 @@ public record LiveTripResource(
     int TotalChildren,
     LiveLocationResource? Location,
     IReadOnlyList<LiveStopResource> Stops,
-    IReadOnlyList<LiveChildResource> Children);
+    IReadOnlyList<LiveChildResource> Children,
+    string? VehiclePlate = null,
+    string? VehicleModel = null,
+    string? DriverPhone = null,
+    string? DriverLicense = null,
+    string? DriverLicenseCategory = null,
+    string? SoatPolicy = null,
+    string? SoatInsurer = null,
+    string? SoatExpiresAt = null,
+    bool SoatValid = true);
 
 /// <summary>
 ///     Constants and geometry helpers of the live tracking. GPS points (<c>location_records</c>) and
