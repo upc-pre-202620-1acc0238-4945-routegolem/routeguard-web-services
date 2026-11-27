@@ -1,17 +1,21 @@
 using Microsoft.EntityFrameworkCore;
+using RouteGuard.Platform.FleetRouteManagement.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 using RouteGuard.Platform.IdentityAccessManagement.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 using RouteGuard.Platform.NotificationsCommunication.Domain.Model.Aggregates;
 using RouteGuard.Platform.NotificationsCommunication.Domain.Model.Commands;
 using RouteGuard.Platform.NotificationsCommunication.Domain.Model.Entities;
+using RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects;
 using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
-using RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.Aggregates;
-using RouteGuard.Platform.StakeholderAssetManagement.Domain.Model.ValueObjects;
+using RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities;
+using RouteGuard.Platform.StakeholderAssetManagement.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
+using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects;
 using TripAggregate = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates.Trip;
 
 namespace RouteGuard.Platform.NotificationsCommunication.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 
 /// <summary>
-///     Seeds the Notifications bounded context with demo notifications and one route announcement.
+///     Seeds the Notifications bounded context with demo notifications, geofence alerts,
+///     route announcements, internal route chat messages, and support tickets.
 /// </summary>
 public static class NotificationSeeder
 {
@@ -22,43 +26,130 @@ public static class NotificationSeeder
     {
         await SeedTemplatesAsync(context, cancellationToken);
 
-        var seededParentEmail = new Email("parent@routeguard.pe");
-        var parent = await context.Set<Parent>().Where(p => p.Email == seededParentEmail)
-            .FirstOrDefaultAsync(cancellationToken);
-        var trip = await context.Set<TripAggregate>().FirstOrDefaultAsync(cancellationToken);
-        if (parent is null || trip is null) return;
+        var trips = await context.Set<TripAggregate>().ToListAsync(cancellationToken);
+        var morningTrip = trips
+            .Where(t => t.RouteId.Identifier == FleetSeeder.MorningRouteId)
+            .OrderByDescending(t => t.IsInProgress())
+            .ThenByDescending(t => t.StartTime)
+            .FirstOrDefault() ?? trips.FirstOrDefault();
+
+        var afternoonTrip = trips
+            .Where(t => t.RouteId.Identifier == FleetSeeder.AfternoonRouteId)
+            .OrderByDescending(t => t.IsInProgress())
+            .ThenByDescending(t => t.StartTime)
+            .FirstOrDefault() ?? morningTrip;
+
+        if (morningTrip is null) return;
 
         var organizationId = IamSeeder.SeedOrganizationId;
-        var notifications = await context.Set<Notification>()
-            .Include(notification => notification.Announcements)
+        var existing = await context.Set<Notification>()
+            .Include(n => n.Announcements)
             .ToListAsync(cancellationToken);
 
-        if (notifications.Count == 0)
+        EnsureNotification(context, existing,
+            Guid.Parse("78000000-0000-0000-0000-000000000001"),
+            organizationId,
+            StakeholderSeeder.RositaParentId,
+            morningTrip.Id.Identifier,
+            "TRIP_STARTED",
+            "Viaje iniciado",
+            "El bus ABC-123 inició la Ruta San Martín - Turno Mañana.",
+            delivered: true);
+
+        var geofenceNotifId = Guid.Parse("78000000-0000-0000-0000-000000000002");
+        var geofenceNotif = EnsureNotification(context, existing,
+            geofenceNotifId,
+            organizationId,
+            StakeholderSeeder.RositaParentId,
+            morningTrip.Id.Identifier,
+            "GEOFENCE_BREACHED",
+            "El vehículo se acerca",
+            "El vehículo se acerca a la parada Parque Kennedy (a menos de 500 m).",
+            delivered: false);
+
+        var announcementNotif = EnsureNotification(context, existing,
+            Guid.Parse("78000000-0000-0000-0000-000000000003"),
+            organizationId,
+            StakeholderSeeder.RositaParentId,
+            morningTrip.Id.Identifier,
+            "ANNOUNCEMENT",
+            "Aviso del conductor",
+            WelcomeAnnouncement,
+            delivered: true);
+
+        if (announcementNotif is not null &&
+            announcementNotif.Announcements.All(a => a.RouteId != new NotificationId(morningTrip.RouteId.Identifier)))
         {
-            var tripStarted = new Notification(new CreateNotificationCommand(organizationId,
-                parent.Id.Identifier, trip.Id.Identifier, "TRIP_STARTED",
-                "El bus inició la Ruta San Martín - Turno Mañana."));
-            tripStarted.Dispatch();
-            tripStarted.MarkDelivered();
-            context.Add(tripStarted);
+            announcementNotif.AddAnnouncement(morningTrip.RouteId.Identifier, WelcomeAnnouncement);
         }
 
-        var announcement = notifications.FirstOrDefault(notification =>
-            notification.Category.Value == "ANNOUNCEMENT" &&
-            notification.TripId == new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.TripId(trip.Id.Identifier));
-
-        if (announcement is null)
+        if (afternoonTrip is not null)
         {
-            announcement = new Notification(new CreateNotificationCommand(organizationId,
-                parent.Id.Identifier, trip.Id.Identifier, "ANNOUNCEMENT", WelcomeAnnouncement));
-            announcement.Dispatch();
-            context.Add(announcement);
+            EnsureNotification(context, existing,
+                Guid.Parse("78000000-0000-0000-0000-000000000004"),
+                organizationId,
+                StakeholderSeeder.JorgeParentId,
+                afternoonTrip.Id.Identifier,
+                "TRIP_STARTED",
+                "Viaje iniciado",
+                "El bus DEF-456 inició la Ruta Miraflores - Turno Tarde.",
+                delivered: false);
         }
-
-        if (announcement.Announcements.All(current => current.RouteId != new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.NotificationId(trip.RouteId.Identifier)))
-            announcement.AddAnnouncement(trip.RouteId.Identifier, WelcomeAnnouncement);
 
         await context.SaveChangesAsync(cancellationToken);
+
+        if (geofenceNotif is not null)
+        {
+            var targetNotifId = new NotificationId(geofenceNotifId);
+            var hasAlert = await context.Set<GeofenceAlert>()
+                .AnyAsync(a => a.NotificationId == targetNotifId, cancellationToken);
+            if (!hasAlert)
+            {
+                context.Add(new GeofenceAlert(
+                    new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.TripId(morningTrip.Id.Identifier),
+                    targetNotifId,
+                    GeofenceAlert.Approaching,
+                    -12.1155,
+                    -77.0308));
+                await context.SaveChangesAsync(cancellationToken);
+            }
+        }
+    }
+
+    private static Notification? EnsureNotification(
+        AppDbContext context,
+        List<Notification> existing,
+        Guid id,
+        Guid organizationId,
+        Guid parentId,
+        Guid tripId,
+        string category,
+        string title,
+        string message,
+        bool delivered)
+    {
+        var nid = new NotificationId(id);
+        var found = existing.FirstOrDefault(n => n.Id == nid);
+        if (found is not null) return found;
+
+        // Avoid adding duplicate welcome announcement if an identical seeded notification already exists.
+        if (category == "ANNOUNCEMENT" &&
+            existing.Any(n => n.ParentId.Identifier == parentId &&
+                              n.Category.Value == "ANNOUNCEMENT" &&
+                              n.Message.Content == message))
+        {
+            return null;
+        }
+
+        var notification = new Notification(new CreateNotificationCommand(
+            organizationId, parentId, tripId, category, message));
+        context.Entry(notification).Property(n => n.Id).CurrentValue = nid;
+        notification.Describe(title, null);
+        notification.Dispatch();
+        if (delivered) notification.MarkDelivered();
+        context.Add(notification);
+        existing.Add(notification);
+        return notification;
     }
 
     /// <summary>Notification templates (es-PE & en-US) with {placeholders}; seeded idempotently.</summary>
@@ -93,54 +184,88 @@ public static class NotificationSeeder
     public static async Task EnsureCommunicationSeededAsync(AppDbContext context, CancellationToken cancellationToken = default)
     {
         var organizationId = IamSeeder.SeedOrganizationId;
-        var routeId = Guid.Parse("f0000000-0000-0000-0000-000000000001");
 
-        if (!await context.Set<RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.RouteAnnouncement>().AnyAsync(cancellationToken))
+        var existingAnnouncements = await context.Set<RouteAnnouncement>().ToListAsync(cancellationToken);
+        var announcements = new[]
         {
-            context.Add(new RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.RouteAnnouncement
+            new RouteAnnouncement
             {
                 Id = Guid.Parse("74000000-0000-0000-0000-000000000001"),
                 OrganizationId = organizationId,
-                RouteId = routeId,
+                RouteId = FleetSeeder.MorningRouteId,
                 AuthorUserId = Guid.Parse("b0000000-0000-0000-0000-000000000002"),
                 AuthorName = "Carlos Ramirez",
                 Title = "Salida puntual - Turno Mañana",
                 Message = "Buenos días familias. Recordamos estar 5 minutos antes en su paradero asignado. ¡Buen inicio de jornada!",
                 Priority = "IMPORTANT",
                 CreatedAt = DateTimeOffset.UtcNow
-            });
+            },
+            new RouteAnnouncement
+            {
+                Id = Guid.Parse("74000000-0000-0000-0000-000000000002"),
+                OrganizationId = organizationId,
+                RouteId = FleetSeeder.AfternoonRouteId,
+                AuthorUserId = Guid.Parse("b0000000-0000-0000-0000-000000000004"),
+                AuthorName = "Luis Torres",
+                Title = "Desvío menor por obras en Av. Santa Cruz",
+                Message = "Tomaremos calle paralela por 2 cuadras antes de Óvalo Gutiérrez. El horario de entrega se mantiene sin cambios.",
+                Priority = "NORMAL",
+                CreatedAt = DateTimeOffset.UtcNow.AddMinutes(-30)
+            }
+        };
+        foreach (var a in announcements)
+        {
+            if (existingAnnouncements.All(x => x.Id != a.Id))
+                context.Add(a);
         }
 
-        if (!await context.Set<RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.ChatMessage>().AnyAsync(cancellationToken))
+        var existingMessages = await context.Set<ChatMessage>().ToListAsync(cancellationToken);
+        var messages = new[]
         {
-            context.AddRange(
-                new RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.ChatMessage
-                {
-                    Id = Guid.Parse("75000000-0000-0000-0000-000000000001"),
-                    OrganizationId = organizationId,
-                    RouteId = routeId,
-                    SenderUserId = Guid.Parse("b0000000-0000-0000-0000-000000000002"),
-                    SenderName = "Carlos Ramirez",
-                    SenderRole = "DRIVER",
-                    Message = "Buenos días sra. Rosita, ya salimos de base rumbo a San Borja.",
-                    SentAt = DateTimeOffset.UtcNow.AddMinutes(-15)
-                },
-                new RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.ChatMessage
-                {
-                    Id = Guid.Parse("75000000-0000-0000-0000-000000000002"),
-                    OrganizationId = organizationId,
-                    RouteId = routeId,
-                    SenderUserId = Guid.Parse("b0000000-0000-0000-0000-000000000003"),
-                    SenderName = "Rosita Nery",
-                    SenderRole = "PARENT",
-                    Message = "Muchas gracias Carlos, Mateo y Luciana ya están listos.",
-                    SentAt = DateTimeOffset.UtcNow.AddMinutes(-10)
-                });
+            new ChatMessage
+            {
+                Id = Guid.Parse("75000000-0000-0000-0000-000000000001"),
+                OrganizationId = organizationId,
+                RouteId = FleetSeeder.MorningRouteId,
+                SenderUserId = Guid.Parse("b0000000-0000-0000-0000-000000000002"),
+                SenderName = "Carlos Ramirez",
+                SenderRole = "DRIVER",
+                Message = "Buenos días sra. Rosita, ya salimos de base rumbo a Miraflores y San Miguel.",
+                SentAt = DateTimeOffset.UtcNow.AddMinutes(-15)
+            },
+            new ChatMessage
+            {
+                Id = Guid.Parse("75000000-0000-0000-0000-000000000002"),
+                OrganizationId = organizationId,
+                RouteId = FleetSeeder.MorningRouteId,
+                SenderUserId = Guid.Parse("b0000000-0000-0000-0000-000000000003"),
+                SenderName = "Rosita Nery",
+                SenderRole = "PARENT",
+                Message = "Muchas gracias Carlos, Mateo y Luciana ya están listos.",
+                SentAt = DateTimeOffset.UtcNow.AddMinutes(-10)
+            },
+            new ChatMessage
+            {
+                Id = Guid.Parse("75000000-0000-0000-0000-000000000003"),
+                OrganizationId = organizationId,
+                RouteId = FleetSeeder.AfternoonRouteId,
+                SenderUserId = Guid.Parse("b0000000-0000-0000-0000-000000000004"),
+                SenderName = "Luis Torres",
+                SenderRole = "DRIVER",
+                Message = "Buenas tardes sr. Jorge, iniciando el recorrido hacia Óvalo Gutiérrez.",
+                SentAt = DateTimeOffset.UtcNow.AddMinutes(-8)
+            }
+        };
+        foreach (var m in messages)
+        {
+            if (existingMessages.All(x => x.Id != m.Id))
+                context.Add(m);
         }
 
-        if (!await context.Set<RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.SupportTicket>().AnyAsync(cancellationToken))
+        var existingTickets = await context.Set<SupportTicket>().ToListAsync(cancellationToken);
+        var tickets = new[]
         {
-            context.Add(new RouteGuard.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Entities.SupportTicket
+            new SupportTicket
             {
                 Id = Guid.Parse("76000000-0000-0000-0000-000000000001"),
                 OrganizationId = organizationId,
@@ -151,7 +276,24 @@ public static class NotificationSeeder
                 Message = "Confirmado el radio de alerta de 500m en la puerta principal.",
                 Status = "RESOLVED",
                 CreatedAt = DateTimeOffset.UtcNow.AddDays(-2)
-            });
+            },
+            new SupportTicket
+            {
+                Id = Guid.Parse("76000000-0000-0000-0000-000000000002"),
+                OrganizationId = organizationId,
+                UserId = Guid.Parse("b0000000-0000-0000-0000-000000000005"),
+                TicketCode = "#RG-1025",
+                Category = "ROUTE",
+                Subject = "Actualización de referencia de paradero",
+                Message = "Por favor confirmar la esquina exacta en Óvalo Gutiérrez para el recojo de la tarde.",
+                Status = "OPEN",
+                CreatedAt = DateTimeOffset.UtcNow.AddHours(-5)
+            }
+        };
+        foreach (var t in tickets)
+        {
+            if (existingTickets.All(x => x.Id != t.Id))
+                context.Add(t);
         }
 
         await context.SaveChangesAsync(cancellationToken);

@@ -12,10 +12,9 @@ namespace RouteGuard.Platform.IdentityAccessManagement.Infrastructure.Persistenc
 ///     Seeds the Iam bounded context with the initial organization and demo user accounts.
 /// </summary>
 /// <remarks>
-///     Runs once on startup right after migrations: when the organizations table already has
-///     rows the seeder is a no-op, so redeploys (e.g. Azure App Service container restarts)
-///     never duplicate data. The identifiers are fixed so the frontend demo flows and other
-///     seeded contexts can reference them deterministically.
+///     Idempotent per entity: checks organization and each demo user by deterministic Id/Email so
+///     both fresh databases and existing databases (including Aiven PostgreSQL redeploys) receive
+///     all demo accounts without duplicating or breaking existing records.
 /// </remarks>
 public static class IamSeeder
 {
@@ -24,32 +23,52 @@ public static class IamSeeder
     public static async Task SeedAsync(AppDbContext context, IHashingService hashingService,
         CancellationToken cancellationToken = default)
     {
-        if (await context.Set<Organization>().AnyAsync(cancellationToken)) return;
+        var orgId = new OrganizationId(SeedOrganizationId);
+        var hasOrg = await context.Set<Organization>()
+            .AnyAsync(o => o.Id == orgId, cancellationToken);
 
-        var organization = new Organization(new OrganizationName("Transportes Escolares Lima Norte S.A.C."));
-        context.Entry(organization).Property(o => o.Id).CurrentValue = new OrganizationId(SeedOrganizationId);
-        context.Add(organization);
+        if (!hasOrg)
+        {
+            var organization = new Organization(new OrganizationName("Transportes Escolares Lima Norte S.A.C."));
+            context.Entry(organization).Property(o => o.Id).CurrentValue = orgId;
+            context.Add(organization);
+        }
 
-        AddUser(context, hashingService, "b0000000-0000-0000-0000-000000000001",
+        var existingUsers = await context.Set<User>().ToListAsync(cancellationToken);
+
+        EnsureUser(context, existingUsers, hashingService, "b0000000-0000-0000-0000-000000000001",
             "Nickolas", "Quispe", "admin@routeguard.pe", "admin123", RoleTier.Admin);
-        AddUser(context, hashingService, "b0000000-0000-0000-0000-000000000002",
+        EnsureUser(context, existingUsers, hashingService, "b0000000-0000-0000-0000-000000000002",
             "Carlos", "Ramirez", "driver@routeguard.pe", "driver123", RoleTier.Driver);
-        AddUser(context, hashingService, "b0000000-0000-0000-0000-000000000003",
+        EnsureUser(context, existingUsers, hashingService, "b0000000-0000-0000-0000-000000000003",
             "Rosita", "Nery", "parent@routeguard.pe", "parent123", RoleTier.Parent);
+        EnsureUser(context, existingUsers, hashingService, "b0000000-0000-0000-0000-000000000004",
+            "Luis", "Torres", "luis.torres@routeguard.pe", "driver123", RoleTier.Driver);
+        EnsureUser(context, existingUsers, hashingService, "b0000000-0000-0000-0000-000000000005",
+            "Jorge", "Salas", "jorge.salas@gmail.com", "parent123", RoleTier.Parent);
 
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    private static void AddUser(AppDbContext context, IHashingService hashingService, string id,
-        string firstName, string lastName, string email, string password, string roleTier)
+    private static void EnsureUser(AppDbContext context, List<User> existingUsers, IHashingService hashingService,
+        string id, string firstName, string lastName, string email, string password, string roleTier)
     {
+        var userId = new UserId(Guid.Parse(id));
+        if (existingUsers.Any(u =>
+                u.Id == userId ||
+                string.Equals(u.Email.Value, email, StringComparison.OrdinalIgnoreCase)))
+        {
+            return;
+        }
+
         var user = new User(
             new OrganizationId(SeedOrganizationId),
             new FullName(firstName, lastName),
             new Email(email),
             new PasswordHash(hashingService.HashPassword(password)),
             new RoleTier(roleTier));
-        context.Entry(user).Property(u => u.Id).CurrentValue = new UserId(Guid.Parse(id));
+        context.Entry(user).Property(u => u.Id).CurrentValue = userId;
         context.Add(user);
+        existingUsers.Add(user);
     }
 }

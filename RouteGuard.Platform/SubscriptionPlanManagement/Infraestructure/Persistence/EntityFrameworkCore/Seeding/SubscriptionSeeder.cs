@@ -50,8 +50,15 @@ public static class SubscriptionSeeder
     {
         await SeedPlansAsync(context, cancellationToken);
 
-        if (!await context.Set<Domain.Model.Aggregates.Subscription>().AnyAsync(cancellationToken))
+        var seedSubId = new SubscriptionId(Guid.Parse("50000000-0000-0000-0000-000000000001"));
+        var existing = await context.Set<Domain.Model.Aggregates.Subscription>()
+            .FirstOrDefaultAsync(s => s.Id == seedSubId, cancellationToken);
+
+        if (existing is null)
         {
+            if (await context.Set<Domain.Model.Aggregates.Subscription>().AnyAsync(cancellationToken))
+                return;
+
             // Active subscription for the seed organization on the COMPLETE tier.
             var subscription = new Domain.Model.Aggregates.Subscription(
                 new OrganizationId(IdentityAccessManagement.Infrastructure.Persistence.EntityFrameworkCore.Seeding.IamSeeder
@@ -59,9 +66,14 @@ public static class SubscriptionSeeder
                 new PlanId(CompletePlanId),
                 DateTimeOffset.UtcNow,
                 DateTimeOffset.UtcNow.AddDays(30));
-            context.Entry(subscription).Property(s => s.Id).CurrentValue =
-                new SubscriptionId(Guid.Parse("50000000-0000-0000-0000-000000000001"));
+            context.Entry(subscription).Property(s => s.Id).CurrentValue = seedSubId;
             context.Add(subscription);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        else if (existing.IsActive() && existing.EndDate <= DateTimeOffset.UtcNow)
+        {
+            // Keep the seeded demo subscription active instead of expired at 0 remaining days.
+            existing.Renew(DateTimeOffset.UtcNow.AddDays(30));
             await context.SaveChangesAsync(cancellationToken);
         }
     }
