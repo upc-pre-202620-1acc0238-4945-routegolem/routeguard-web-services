@@ -21,8 +21,8 @@ namespace RouteGuard.Platform.TripExecutionMonitoring.Infrastructure.Persistence
 /// <summary>
 ///     Seeds the Trip bounded context with completed, in-progress and pending demo trips,
 ///     realistic Lima GPS breadcrumbs, waypoints, attendances, ratings, and pickup/absence records.
-///     Also repairs out-of-Lima emulator GPS coordinates (e.g., Mountain View / US defaults)
-///     on active Lima trips so vehicles always appear along their Lima school routes.
+///     Also relocates out-of-Lima emulator GPS coordinates (e.g., Mountain View / New York defaults)
+///     onto valid coordinates along the active Lima school route instead of deleting existing rows.
 /// </summary>
 public static class TripSeeder
 {
@@ -184,8 +184,9 @@ public static class TripSeeder
         if (firstStop is not null && waypoints.All(w => !w.IsVisited))
             firstStop.MarkVisited();
 
-        // Check whether this route's stops are in Lima; if so, remove any stray non-Lima GPS records
-        // (such as Android emulator default 37.422, -122.084 or New York coordinates).
+        // Check whether this route's stops are in Lima; if so, relocate any stray non-Lima GPS records
+        // (such as Android emulator default 37.422, -122.084 or New York coordinates) directly onto
+        // waypoints along the assigned route instead of deleting the LocationRecord rows.
         var routeInLima = route.Stops.Any(s => IsWithinLimaMetro(s.Coordinates.Latitude, s.Coordinates.Longitude));
         var existingLocations = await context.Set<LocationRecord>()
             .Where(r => r.TripId == trip.Id)
@@ -194,15 +195,24 @@ public static class TripSeeder
 
         if (routeInLima)
         {
+            var validLimaStops = route.Stops
+                .Where(s => IsWithinLimaMetro(s.Coordinates.Latitude, s.Coordinates.Longitude))
+                .OrderBy(s => s.Order.Position)
+                .Select(s => (s.Coordinates.Latitude, s.Coordinates.Longitude))
+                .ToList();
+            if (validLimaStops.Count == 0)
+            {
+                validLimaStops.Add((-12.1155, -77.0308));
+            }
+
             var stray = existingLocations
                 .Where(r => !IsWithinLimaMetro(r.Latitude, r.Longitude))
                 .ToList();
-            if (stray.Count > 0)
+            for (var i = 0; i < stray.Count; i++)
             {
-                context.RemoveRange(stray);
-                existingLocations = existingLocations
-                    .Where(r => IsWithinLimaMetro(r.Latitude, r.Longitude))
-                    .ToList();
+                var target = validLimaStops[i % validLimaStops.Count];
+                var updatedSpeed = stray[i].SpeedKmh <= 0 ? 28.5 : stray[i].SpeedKmh;
+                stray[i].Relocate(target.Latitude, target.Longitude, updatedSpeed);
             }
         }
 

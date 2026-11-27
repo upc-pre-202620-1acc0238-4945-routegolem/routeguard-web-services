@@ -89,6 +89,22 @@ public class PlatformDomainAndParityTests
     }
 
     [Fact]
+    public void LocationRecord_Relocate_ShouldMoveStrayCoordinateOntoRouteAndKeepTimestamp()
+    {
+        var recorded = DateTimeOffset.UtcNow.AddMinutes(-10);
+        var recordId = Guid.NewGuid();
+        var record = new TripExecutionMonitoring.Domain.Model.Entities.LocationRecord(
+            recordId, new TripId(Guid.NewGuid()), 40.7128, -74.0060, 0, 95, 180, recorded);
+
+        record.Relocate(-12.1211, -77.0297, 28.5);
+
+        Assert.Equal(recordId, record.Id);
+        Assert.Equal(recorded, record.RecordedAt);
+        Assert.True(TripSeeder.IsWithinLimaMetro(record.Latitude, record.Longitude));
+        Assert.Equal(28.5, record.SpeedKmh);
+    }
+
+    [Fact]
     public void Subscription_Renew_ShouldExtendEndDateAndRemainActive()
     {
         var start = DateTimeOffset.UtcNow.AddDays(-40);
