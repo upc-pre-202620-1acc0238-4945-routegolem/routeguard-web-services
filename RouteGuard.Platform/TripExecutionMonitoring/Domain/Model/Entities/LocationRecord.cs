@@ -34,4 +34,13 @@ public class LocationRecord
     public double Heading { get; private set; }
     public DateTimeOffset RecordedAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+
+    /// <summary>Relocates an out-of-bounds/emulator GPS point onto a valid coordinate along the assigned route.</summary>
+    public void Relocate(double latitude, double longitude, double? speedKmh = null)
+    {
+        Latitude = latitude;
+        Longitude = longitude;
+        if (speedKmh.HasValue)
+            SpeedKmh = speedKmh.Value;
+    }
 }
