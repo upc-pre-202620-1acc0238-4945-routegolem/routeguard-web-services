@@ -75,6 +75,7 @@ public static class TripSeeder
             completedTrip.Start();
             foreach (var childId in morningRoute.Assignment?.ChildIds ?? [])
                 completedTrip.SetBoardingStatus(new TripChildId(childId), new BoardingState(BoardingState.Boarded));
+            completedTrip.ReportIncident(new IncidentDescription("Tráfico ligero en Av. Javier Prado (+4 min de demora)."));
             completedTrip.Complete();
             context.Entry(completedTrip).Property(t => t.StartTime).CurrentValue = DateTimeOffset.UtcNow.AddDays(-1).AddMinutes(-45);
             context.Entry(completedTrip).Property(t => t.EndTime).CurrentValue = DateTimeOffset.UtcNow.AddDays(-1);
