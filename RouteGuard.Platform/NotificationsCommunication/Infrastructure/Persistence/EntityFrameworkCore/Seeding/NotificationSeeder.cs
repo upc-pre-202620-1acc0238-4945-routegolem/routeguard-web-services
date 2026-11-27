@@ -46,6 +46,8 @@ public static class NotificationSeeder
             .Include(n => n.Announcements)
             .ToListAsync(cancellationToken);
 
+        var now = DateTimeOffset.UtcNow;
+
         EnsureNotification(context, existing,
             Guid.Parse("78000000-0000-0000-0000-000000000001"),
             organizationId,
@@ -54,7 +56,30 @@ public static class NotificationSeeder
             "TRIP_STARTED",
             "Viaje iniciado",
             "El bus ABC-123 inició la Ruta San Martín - Turno Mañana.",
-            delivered: true);
+            delivered: true,
+            sentAt: now.AddMinutes(-28));
+
+        EnsureNotification(context, existing,
+            Guid.Parse("78000000-0000-0000-0000-000000000005"),
+            organizationId,
+            StakeholderSeeder.RositaParentId,
+            morningTrip.Id.Identifier,
+            "STUDENT_BOARDED",
+            "Estudiante a bordo",
+            "Mateo Nery y Luciana Nery abordaron la unidad ABC-123 en Colegio San Martín.",
+            delivered: true,
+            sentAt: now.AddMinutes(-20));
+
+        EnsureNotification(context, existing,
+            Guid.Parse("78000000-0000-0000-0000-000000000006"),
+            organizationId,
+            StakeholderSeeder.RositaParentId,
+            morningTrip.Id.Identifier,
+            "INCIDENT_REPORTED",
+            "Incidencia en el viaje",
+            "Congestión vehicular moderada en Av. Arequipa (+5 min de demora estimada).",
+            delivered: false,
+            sentAt: now.AddMinutes(-12));
 
         var geofenceNotifId = Guid.Parse("78000000-0000-0000-0000-000000000002");
         var geofenceNotif = EnsureNotification(context, existing,
@@ -65,7 +90,8 @@ public static class NotificationSeeder
             "GEOFENCE_BREACHED",
             "El vehículo se acerca",
             "El vehículo se acerca a la parada Parque Kennedy (a menos de 500 m).",
-            delivered: false);
+            delivered: false,
+            sentAt: now.AddMinutes(-6));
 
         var announcementNotif = EnsureNotification(context, existing,
             Guid.Parse("78000000-0000-0000-0000-000000000003"),
@@ -75,7 +101,8 @@ public static class NotificationSeeder
             "ANNOUNCEMENT",
             "Aviso del conductor",
             WelcomeAnnouncement,
-            delivered: true);
+            delivered: true,
+            sentAt: now.AddMinutes(-24));
 
         if (announcementNotif is not null &&
             announcementNotif.Announcements.All(a => a.RouteId != new NotificationId(morningTrip.RouteId.Identifier)))
@@ -83,6 +110,7 @@ public static class NotificationSeeder
             announcementNotif.AddAnnouncement(morningTrip.RouteId.Identifier, WelcomeAnnouncement);
         }
 
+        GeofenceAlert? jorgeGeofenceAlert = null;
         if (afternoonTrip is not null)
         {
             EnsureNotification(context, existing,
@@ -93,17 +121,69 @@ public static class NotificationSeeder
                 "TRIP_STARTED",
                 "Viaje iniciado",
                 "El bus DEF-456 inició la Ruta Miraflores - Turno Tarde.",
-                delivered: false);
+                delivered: true,
+                sentAt: now.AddMinutes(-18));
+
+            EnsureNotification(context, existing,
+                Guid.Parse("78000000-0000-0000-0000-000000000007"),
+                organizationId,
+                StakeholderSeeder.JorgeParentId,
+                afternoonTrip.Id.Identifier,
+                "STUDENT_BOARDED",
+                "Estudiante a bordo",
+                "Diego Salas abordó la unidad DEF-456 en Colegio San Martín.",
+                delivered: true,
+                sentAt: now.AddMinutes(-14));
+
+            var jorgeAnnouncement = EnsureNotification(context, existing,
+                Guid.Parse("78000000-0000-0000-0000-000000000009"),
+                organizationId,
+                StakeholderSeeder.JorgeParentId,
+                afternoonTrip.Id.Identifier,
+                "ANNOUNCEMENT",
+                "Aviso del conductor",
+                "Desvío menor por obras en Av. Santa Cruz; el horario de entrega se mantiene.",
+                delivered: false,
+                sentAt: now.AddMinutes(-10));
+
+            if (jorgeAnnouncement is not null &&
+                jorgeAnnouncement.Announcements.All(a => a.RouteId != new NotificationId(afternoonTrip.RouteId.Identifier)))
+            {
+                jorgeAnnouncement.AddAnnouncement(afternoonTrip.RouteId.Identifier,
+                    "Desvío menor por obras en Av. Santa Cruz; el horario de entrega se mantiene.");
+            }
+
+            var jorgeGeofenceId = Guid.Parse("78000000-0000-0000-0000-000000000008");
+            var jorgeGeofenceNotif = EnsureNotification(context, existing,
+                jorgeGeofenceId,
+                organizationId,
+                StakeholderSeeder.JorgeParentId,
+                afternoonTrip.Id.Identifier,
+                "GEOFENCE_BREACHED",
+                "El vehículo se acerca",
+                "El vehículo se acerca a la parada Óvalo Gutiérrez (a menos de 500 m).",
+                delivered: false,
+                sentAt: now.AddMinutes(-4));
+
+            if (jorgeGeofenceNotif is not null)
+            {
+                jorgeGeofenceAlert = new GeofenceAlert(
+                    new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.TripId(afternoonTrip.Id.Identifier),
+                    new NotificationId(jorgeGeofenceId),
+                    GeofenceAlert.Approaching,
+                    -12.1045,
+                    -77.0485);
+            }
         }
 
         await context.SaveChangesAsync(cancellationToken);
 
+        var existingAlerts = await context.Set<GeofenceAlert>().ToListAsync(cancellationToken);
+        var addedAlerts = false;
         if (geofenceNotif is not null)
         {
             var targetNotifId = new NotificationId(geofenceNotifId);
-            var hasAlert = await context.Set<GeofenceAlert>()
-                .AnyAsync(a => a.NotificationId == targetNotifId, cancellationToken);
-            if (!hasAlert)
+            if (existingAlerts.All(a => a.NotificationId != targetNotifId))
             {
                 context.Add(new GeofenceAlert(
                     new RouteGuard.Platform.NotificationsCommunication.Domain.Model.ValueObjects.TripId(morningTrip.Id.Identifier),
@@ -111,9 +191,16 @@ public static class NotificationSeeder
                     GeofenceAlert.Approaching,
                     -12.1155,
                     -77.0308));
-                await context.SaveChangesAsync(cancellationToken);
+                addedAlerts = true;
             }
         }
+        if (jorgeGeofenceAlert is not null && existingAlerts.All(a => a.NotificationId != jorgeGeofenceAlert.NotificationId))
+        {
+            context.Add(jorgeGeofenceAlert);
+            addedAlerts = true;
+        }
+        if (addedAlerts)
+            await context.SaveChangesAsync(cancellationToken);
     }
 
     private static Notification? EnsureNotification(
@@ -126,7 +213,8 @@ public static class NotificationSeeder
         string category,
         string title,
         string message,
-        bool delivered)
+        bool delivered,
+        DateTimeOffset sentAt)
     {
         var nid = new NotificationId(id);
         var found = existing.FirstOrDefault(n => n.Id == nid);
@@ -144,6 +232,7 @@ public static class NotificationSeeder
         var notification = new Notification(new CreateNotificationCommand(
             organizationId, parentId, tripId, category, message));
         context.Entry(notification).Property(n => n.Id).CurrentValue = nid;
+        context.Entry(notification).Property(n => n.SentAt).CurrentValue = sentAt;
         notification.Describe(title, null);
         notification.Dispatch();
         if (delivered) notification.MarkDelivered();
