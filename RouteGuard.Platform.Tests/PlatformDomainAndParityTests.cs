@@ -7,6 +7,7 @@ using RouteGuard.Platform.SubscriptionPlanManagement.Domain.Model.Aggregates;
 using RouteGuard.Platform.SubscriptionPlanManagement.Domain.Model.ValueObjects;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.Aggregates;
 using RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects;
+using RouteGuard.Platform.TripExecutionMonitoring.Infrastructure.Persistence.EntityFrameworkCore.Seeding;
 using Xunit;
 using TripOrgId = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects.OrganizationId;
 using TripRouteId = RouteGuard.Platform.TripExecutionMonitoring.Domain.Model.ValueObjects.RouteId;
@@ -72,5 +73,36 @@ public class PlatformDomainAndParityTests
 
         Assert.True(trip.State.IsCancelled());
         Assert.NotNull(trip.CancelledAt);
+    }
+
+    [Theory]
+    [InlineData(-12.0464, -77.0428, true)]  // Colegio San Martin, Lima
+    [InlineData(-12.1211, -77.0297, true)]  // Parque Kennedy, Miraflores
+    [InlineData(-12.0776, -77.0824, true)]  // Plaza San Miguel, Lima
+    [InlineData(37.421998, -122.084, false)] // Android Emulator Mountain View
+    [InlineData(40.7128, -74.0060, false)]   // New York
+    [InlineData(0.0, 0.0, false)]            // Null Island
+    public void TripSeeder_IsWithinLimaMetro_ShouldFilterOutNonLimaCoordinates(
+        double lat, double lng, bool expected)
+    {
+        Assert.Equal(expected, TripSeeder.IsWithinLimaMetro(lat, lng));
+    }
+
+    [Fact]
+    public void Subscription_Renew_ShouldExtendEndDateAndRemainActive()
+    {
+        var start = DateTimeOffset.UtcNow.AddDays(-40);
+        var sub = new Subscription(
+            new SubscriptionPlanManagement.Domain.Model.ValueObjects.OrganizationId(Guid.NewGuid()),
+            new PlanId(Guid.NewGuid()),
+            start,
+            start.AddDays(30));
+
+        Assert.Equal(0, sub.GetRemainingDays());
+
+        sub.Renew(DateTimeOffset.UtcNow.AddDays(30));
+
+        Assert.True(sub.IsActive());
+        Assert.True(sub.GetRemainingDays() >= 29);
     }
 }

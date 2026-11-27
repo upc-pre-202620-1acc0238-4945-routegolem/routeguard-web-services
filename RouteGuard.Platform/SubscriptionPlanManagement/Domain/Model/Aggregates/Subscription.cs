@@ -48,6 +48,14 @@ public class Subscription
 
     public void Activate() => State = new SubscriptionState(SubscriptionState.Active);
 
+    public void Renew(DateTimeOffset newEndDate)
+    {
+        if (newEndDate <= StartDate)
+            throw new ArgumentException("Subscription end date must be after the start date.", nameof(newEndDate));
+        EndDate = newEndDate;
+        State = new SubscriptionState(SubscriptionState.Active);
+    }
+
     public void Upgrade(PlanId planId) => PlanId = planId;
 
     public void Cancel() => State = new SubscriptionState(SubscriptionState.Cancelled);
